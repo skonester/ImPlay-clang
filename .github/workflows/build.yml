@@ -41,7 +41,7 @@ jobs:
             build/ImPlay-*.AppImage
             build/ImPlay-*.deb
   macos:
-    runs-on: macos-13
+    runs-on: macos-14
     name: macOS
     steps:
       - uses: actions/checkout@v4
