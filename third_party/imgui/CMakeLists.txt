@@ -3,7 +3,13 @@ project(imgui)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Freetype REQUIRED)
+find_package(Freetype)
+if(NOT Freetype_FOUND AND TARGET freetype)
+  set(FREETYPE_LIBRARIES freetype)
+  set(FREETYPE_INCLUDE_DIRS "")
+elseif(NOT Freetype_FOUND)
+  message(FATAL_ERROR "Freetype not found")
+endif()
 
 add_library(imgui OBJECT
   source/imgui.cpp

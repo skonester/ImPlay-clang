@@ -46,6 +46,65 @@ ImPlay aims to be mpv compatible, which means almost all mpv features from the [
 - Binary version: download from the [Releases](https://github.com/tsl0922/ImPlay/releases) page
 - Build from source: check the [Compiling](https://github.com/tsl0922/ImPlay/wiki/Compiling) document
 
+## Modern Windows Build (2026 Update)
+
+The Windows build system has been modernized to support **Visual Studio 2022**, **Clang-CL**, and **CMake Presets**.
+
+### Prerequisites
+
+To build on Windows in 2026, ensure the following are installed:
+
+1.  **Visual Studio 2022**: With the "Desktop development with C++" workload.
+2.  **LLVM (Clang)**: Install the latest LLVM for Windows (standalone or via the VS Installer).
+3.  **Ninja**: A fast build tool used by the modern presets.
+4.  **Windows SDK**: Ensure the latest Windows 10/11 SDK is installed.
+
+### Building with Presets
+
+#### Command Line
+```powershell
+# Configure using the Clang Release preset
+cmake --preset x64-clang-release
+
+# Build the project
+cmake --build --preset x64-clang-release
+```
+
+#### Visual Studio 2022
+1.  Open the **ImPlay.slnx** file.
+2.  Select your desired configuration (e.g., `x64 Clang Release`) from the top toolbar.
+3.  Press **F7** or click **Build > Build Solution**.
+
+#### JetBrains Rider
+1.  Open the project folder.
+2.  Rider will automatically detect `CMakePresets.json`.
+3.  Select the preset in the top toolbar and click the **Build** icon.
+
+### Modernization Changes
+
+The following changes were implemented in 2026 to ensure a stable and modern build environment:
+
+*   **Dependency Management**: Migrated to `FetchContent` for `fmt` (v9.1.0), `nlohmann_json` (v3.11.3), and `Freetype` (v2.13.2). This removes the need for manual library management and ensures version consistency.
+*   **Clang-CL Support**: Added full support for the Clang compiler on Windows, including specific flags for C++20 standard compliance and resource compilation.
+*   **Solution Format**: Introduced the `.slnx` format for modern Visual Studio integration.
+*   **Compatibility Fixes**:
+    *   Resolved `fmt` `consteval` issues by pinning to v9.1.0 and disabling strict compile-time checks for Clang.
+    *   Fixed font symbol linkage by wrapping headers in `extern "C"`.
+    *   Defined `NOMINMAX` to prevent Windows header conflicts.
+    *   Automated `mpv.lib` import library preparation for the MSVC-style linker.
+
+### Continuous Integration (CI)
+
+The project includes a modernized GitHub Actions workflow (`.github/workflows/build.yml`) that automates the build and release process:
+
+*   **Native Windows Pipeline**: Unlike older setups using MSYS2, the CI now uses a native Windows runner with the **Clang-CL** compiler and **Ninja** generator.
+*   **Environment Parity**: The CI uses the exact same **CMake Presets** as local development, ensuring that what builds on your machine also builds in the cloud.
+*   **Automated Packaging**: Every push to the main branch automatically generates:
+    *   **Windows**: `.msi` installers and `.zip` archives.
+    *   **macOS**: `.dmg` disk images.
+    *   **Linux**: `.deb` packages and `.AppImage` files.
+*   **Continuous Releases**: Successfully built artifacts are automatically deployed to a `continuous` release tag for easy testing.
+
 Read the [FAQ](https://github.com/tsl0922/ImPlay/wiki/FAQ).
 
 # Screenshots

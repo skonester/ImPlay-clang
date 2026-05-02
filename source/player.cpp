@@ -8,9 +8,11 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_impl_opengl3.h>
+extern "C" {
 #include <fonts/cascadia.h>
 #include <fonts/fontawesome.h>
 #include <fonts/unifont.h>
+}
 #include <strnatcmp.h>
 #include "theme.h"
 #include "player.h"

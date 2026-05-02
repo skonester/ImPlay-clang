@@ -1,13 +1,15 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.24)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(GetGitVersion)
+include(FetchContent)
 
 get_git_version(GIT_VERSION SEM_VER)
 
 project(ImPlay VERSION "${SEM_VER}")
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(CMakeDependentOption)
 
@@ -17,33 +19,53 @@ option(CREATE_PACKAGE "Create binary packages with CPack" OFF)
 cmake_dependent_option(USE_MPV_WIN_BUILD "Use Prebuilt static mpv dll on Windows" ON "WIN32" OFF)
 cmake_dependent_option(USE_XDG_PORTAL "Use xdg-desktop-portal for file dialogs on Linux" OFF "UNIX;NOT APPLE" OFF)
 
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+include(FetchContent)
+
+FetchContent_Declare(
+  freetype
+  URL https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-2.zip
+)
+FetchContent_MakeAvailable(freetype)
+
 find_package(Threads REQUIRED)
-find_package(PkgConfig REQUIRED)
 
 if(USE_MPV_WIN_BUILD)
   include(GetMpvWinDev)
   get_mpv_win_dev(mpv_dev)
-else()
-  pkg_search_module(MPV REQUIRED mpv>=0.33.0)
 endif()
-if(USE_PATCHED_GLFW)
+
+if(USE_PATCHED_GLFW OR WIN32)
   add_subdirectory(third_party/glfw)
   set(GLFW_LIBRARIES glfw)
-else()
-  pkg_search_module(GLFW REQUIRED glfw3>=3.1)
-endif()
-if(USE_XDG_PORTAL)
-  set(NFD_PORTAL ON CACHE BOOL "Use xdg-desktop-portal for file dialogs on Linux" FORCE)
 endif()
 
 set(LIBROMFS_PROJECT_NAME ${PROJECT_NAME})
 set(LIBROMFS_RESOURCE_LOCATION "${CMAKE_SOURCE_DIR}/resources/romfs")
 set(OPENGL_LIBRARIES "glad")
 
+# Clang support on Windows
+if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(/W4 -Qunused-arguments)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS -DFMT_COMPILE_TIME_CHECKS=0 -DNOMINMAX)
+endif()
+
+FetchContent_Declare(
+  fmt
+  URL https://github.com/fmtlib/fmt/archive/refs/tags/9.1.0.zip
+)
+FetchContent_Declare(
+  json
+  URL https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.zip
+)
+FetchContent_Declare(
+  freetype
+  URL https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-2.zip
+)
+FetchContent_MakeAvailable(fmt json freetype)
+
 add_subdirectory(third_party/glad)
-add_subdirectory(third_party/fmt)
 add_subdirectory(third_party/natsort)
-add_subdirectory(third_party/json)
 add_subdirectory(third_party/inipp)
 add_subdirectory(third_party/imgui)
 add_subdirectory(third_party/nativefiledialog)
@@ -69,14 +91,17 @@ set(SOURCE_FILES
   source/main.cpp
 )
 set(INCLUDE_DIRS include ${MPV_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
-set(LINK_LIBS glad fmt natsort json inipp nfd imgui ${CMAKE_THREAD_LIBS_INIT} ${MPV_LIBRARIES} ${GLFW_LIBRARIES} ${LIBROMFS_LIBRARY})
+set(LINK_LIBS glad fmt::fmt natsort nlohmann_json::nlohmann_json inipp nfd imgui ${CMAKE_THREAD_LIBS_INIT} ${MPV_LIBRARIES} ${GLFW_LIBRARIES} ${LIBROMFS_LIBRARY})
 
 if(WIN32)
   configure_file(${PROJECT_SOURCE_DIR}/resources/win32/app.rc.in ${PROJECT_BINARY_DIR}/app.rc @ONLY)
   list(APPEND SOURCE_FILES ${PROJECT_BINARY_DIR}/app.rc)
 endif()
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} WIN32 ${SOURCE_FILES})
+if(WIN32)
+  set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup")
+endif()
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
 target_link_directories(${PROJECT_NAME} PRIVATE ${MPV_LIBRARY_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LINK_LIBS})
@@ -100,4 +125,4 @@ else()
     install(FILES ${PROJECT_SOURCE_DIR}/resources/linux/implay.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
     install(FILES ${PROJECT_SOURCE_DIR}/resources/icon.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps RENAME implay.png)
   endif()
-endif()
+endif()
