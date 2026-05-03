@@ -5,8 +5,8 @@ endif()
 
 function(get_mpv_win_dev name)
   ExternalProject_Add(${name}
-    URL https://downloads.sourceforge.net/mpv-player-windows/mpv-dev-x86_64-20250713-git-bd21180.7z
-    URL_HASH SHA256=e75982d90a1fa3620b194204420386f590b4e96f03dc9daf46b996fccce3549f
+    URL ${PROJECT_SOURCE_DIR}/mpv-dev-x86_64-20260503-git-948c86d24c.7z
+    URL_HASH SHA256=2D88F4A6BD63A559814E6FD28A0D2E286EE381028A2D22EFA4452AFD4252000E
     DOWNLOAD_NO_PROGRESS ON
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ""
