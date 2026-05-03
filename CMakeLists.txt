@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.24)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(GetGitVersion)
-include(FetchContent)
 
 get_git_version(GIT_VERSION SEM_VER)
 
@@ -23,10 +22,18 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 include(FetchContent)
 
 FetchContent_Declare(
+  fmt
+  URL https://github.com/fmtlib/fmt/archive/refs/tags/9.1.0.zip
+)
+FetchContent_Declare(
+  json
+  URL https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.zip
+)
+FetchContent_Declare(
   freetype
   URL https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-2.zip
 )
-FetchContent_MakeAvailable(freetype)
+FetchContent_MakeAvailable(fmt json freetype)
 
 find_package(Threads REQUIRED)
 
@@ -49,20 +56,6 @@ if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(/W4 -Qunused-arguments)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS -DFMT_COMPILE_TIME_CHECKS=0 -DNOMINMAX)
 endif()
-
-FetchContent_Declare(
-  fmt
-  URL https://github.com/fmtlib/fmt/archive/refs/tags/9.1.0.zip
-)
-FetchContent_Declare(
-  json
-  URL https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.zip
-)
-FetchContent_Declare(
-  freetype
-  URL https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-2.zip
-)
-FetchContent_MakeAvailable(fmt json freetype)
 
 add_subdirectory(third_party/glad)
 add_subdirectory(third_party/natsort)
@@ -125,4 +118,4 @@ else()
     install(FILES ${PROJECT_SOURCE_DIR}/resources/linux/implay.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
     install(FILES ${PROJECT_SOURCE_DIR}/resources/icon.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps RENAME implay.png)
   endif()
-endif()
+endif()

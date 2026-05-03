@@ -76,6 +76,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ilammy/msvc-dev-cmd@v1
+      - name: Verify clang-cl
+        run: '& "C:/Program Files/LLVM/bin/clang-cl.exe" --version'
       - name: Build ImPlay
         run: |
           cmake --preset x64-clang-release -DCREATE_PACKAGE=ON
