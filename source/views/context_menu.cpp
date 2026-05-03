@@ -1,4 +1,4 @@
-// Copyright (c) 2022-2025 tsl0922. All rights reserved.
+﻿// Copyright (c) 2022-2025 tsl0922. Libraries updated, fixes by Skonester 2026. All rights reserved.
 // SPDX-License-Identifier: GPL-2.0-only
 
 #include <fonts/fontawesome.h>
@@ -122,10 +122,10 @@ std::vector<ContextMenu::Item> ContextMenu::build() {
       {TYPE_SUBMENU, "", "menu.video", ICON_FA_VIDEO, "", true, false, {
         {.type = TYPE_CALLBACK, .callback = [this](){ drawTracklist("video", "vid", mpv->vid); }},
         {TYPE_SUBMENU, "", "menu.video.rotate", ICON_FA_SPINNER, "", true, false, {
-          {TYPE_NORMAL, "set video-rotate 90", "90°"},
-          {TYPE_NORMAL, "set video-rotate 180", "180°"},
-          {TYPE_NORMAL, "set video-rotate 270", "270°"},
-          {TYPE_NORMAL, "set video-rotate 0", "0°"},
+          {TYPE_NORMAL, "set video-rotate 90", "90Â°"},
+          {TYPE_NORMAL, "set video-rotate 180", "180Â°"},
+          {TYPE_NORMAL, "set video-rotate 270", "270Â°"},
+          {TYPE_NORMAL, "set video-rotate 0", "0Â°"},
         }},
         {TYPE_SUBMENU, "", "menu.video.scale", ICON_FA_GLASSES, "", true, false, {
           {TYPE_NORMAL, "add window-scale -0.1", "menu.video.scale.in", ICON_FA_MINUS_CIRCLE},

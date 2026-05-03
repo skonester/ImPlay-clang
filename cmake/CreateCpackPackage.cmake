@@ -5,8 +5,7 @@ endif()
 
 function(get_mpv_win_bin name)
   ExternalProject_Add(${name}
-    URL https://downloads.sourceforge.net/mpv-player-windows/mpv-x86_64-20250713-git-bd21180.7z
-    URL_HASH SHA256=03dacaf114df07d33b9faafb9fd7d5486957abfa967515fdce19192d6e313c39
+    URL https://downloads.sourceforge.net/mpv-player-windows/mpv-x86_64-20260503-git-948c86d24c.7z
     DOWNLOAD_NO_PROGRESS ON
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ""
@@ -133,7 +132,7 @@ macro(create_package)
     set(MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_VERSION}")
     set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.tsl0922.ImPlay")
-    set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 2022 tsl0922. All rights reserved." )
+    set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 2022-2025 tsl0922. Libraries updated, fixes by Skonester 2026. All rights reserved." )
 
     set(CPACK_GENERATOR DragNDrop)
     set(CPACK_BUNDLE_NAME ${PROJECT_NAME})

@@ -1,4 +1,4 @@
-name: build
+﻿name: build
 
 on:
   push:
@@ -80,7 +80,7 @@ jobs:
         run: '& "C:/Program Files/LLVM/bin/clang-cl.exe" --version'
       - name: Build ImPlay
         run: |
-          cmake --preset x64-clang-release -DCREATE_PACKAGE=ON
+          cmake --preset x64-clang-release -DCREATE_PACKAGE=ON -DCMAKE_C_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang-cl.exe"
           cmake --build --preset x64-clang-release --target package
       - uses: actions/upload-artifact@v4
         with:
@@ -110,8 +110,9 @@ jobs:
           artifacts: "ImPlay-dev-*"
           allowUpdates: true
           prerelease: true
-          name: Continuous build
+          name: Continuous build (2026 Edition)
           body: |
+            > **NOTICE: Libraries updated, fixes by Skonester 2026.**
             > WARNING: This is the DEV version, may contains bugs or unfinished features, [Stable version](https://github.com/tsl0922/ImPlay/releases/latest). 
             # Install
             ## Windows

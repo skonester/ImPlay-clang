@@ -1,4 +1,4 @@
-name: release
+﻿name: release
 
 on:
   push:
@@ -19,6 +19,7 @@ jobs:
           commit: ${{ github.sha }}
           artifacts: "ImPlay-*/*"
           body: |
+            > **NOTICE: Libraries updated, fixes by Skonester 2026.**
             # Install
             ## Windows
             - MSI

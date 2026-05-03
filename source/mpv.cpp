@@ -1,4 +1,4 @@
-// Copyright (c) 2022-2025 tsl0922. All rights reserved.
+﻿// Copyright (c) 2022-2025 tsl0922. Libraries updated, fixes by Skonester 2026. All rights reserved.
 // SPDX-License-Identifier: GPL-2.0-only
 
 #include <stdexcept>
@@ -99,9 +99,11 @@ void Mpv::init(GLAddrLoadFunc load, int64_t wid) {
   if (mpv_initialize(mpv) < 0) throw std::runtime_error("could not initialize mpv context");
   if (wid == 0) {
     mpv_opengl_init_params gl_init_params{get_proc_address, (void *)load};
+    int advanced = 1;
     mpv_render_param params[]{
         {MPV_RENDER_PARAM_API_TYPE, const_cast<char *>(MPV_RENDER_API_TYPE_OPENGL)},
         {MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, &gl_init_params},
+        {MPV_RENDER_PARAM_ADVANCED_CONTROL, &advanced},
         {MPV_RENDER_PARAM_INVALID, nullptr},
     };
 

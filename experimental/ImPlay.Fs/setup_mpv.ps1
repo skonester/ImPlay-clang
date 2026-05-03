@@ -1,4 +1,4 @@
-$url = "https://downloads.sourceforge.net/mpv-player-windows/mpv-dev-x86_64-20250713-git-bd21180.7z"
+$url = "https://downloads.sourceforge.net/mpv-player-windows/mpv-dev-x86_64-20260503-git-948c86d24c.7z"
 $output = "mpv-dev.7z"
 $extractDir = "mpv-dev"
 

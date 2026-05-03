@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #define FONT_FILE_NAME_CASCADIA "CascadiaMono-Regular.otf"
 

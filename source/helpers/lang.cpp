@@ -1,4 +1,4 @@
-// Copyright (c) 2022-2025 tsl0922. All rights reserved.
+﻿// Copyright (c) 2022-2025 tsl0922. Libraries updated, fixes by Skonester 2026. All rights reserved.
 // SPDX-License-Identifier: GPL-2.0-only
 
 #include <fstream>

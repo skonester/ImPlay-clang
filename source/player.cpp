@@ -1,4 +1,4 @@
-// Copyright (c) 2022-2025 tsl0922. All rights reserved.
+﻿// Copyright (c) 2022-2025 tsl0922. Libraries updated, fixes by Skonester 2026. All rights reserved.
 // SPDX-License-Identifier: GPL-2.0-only
 
 #include <filesystem>
@@ -182,15 +182,18 @@ void Player::render() {
 void Player::renderVideo() {
   ContextGuard guard(this);
 
+  static int lastWidth = 0, lastHeight = 0;
+  if (width != lastWidth || height != lastHeight) {
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    lastWidth = width;
+    lastHeight = height;
+  }
+
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-  glBindTexture(GL_TEXTURE_2D, tex);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-  glBindTexture(GL_TEXTURE_2D, 0);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
   mpv->render(width, height, fbo, false);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Player::initGui() {
@@ -351,6 +354,13 @@ void Player::updateWindowState() {
   int width = (int)mpv->property<int64_t, MPV_FORMAT_INT64>("dwidth");
   int height = (int)mpv->property<int64_t, MPV_FORMAT_INT64>("dheight");
   if (width > 0 && height > 0) {
+    int mw, mh;
+    GetMonitorSize(&mw, &mh);
+
+    float scale = std::min({1.0f, (float)mw * 0.9f / width, (float)mh * 0.9f / height});
+    width = (int)(width * scale);
+    height = (int)(height * scale);
+
     int x, y, w, h;
     GetWindowPos(&x, &y);
     GetWindowSize(&w, &h);
@@ -414,8 +424,8 @@ void Player::writeMpvConf() {
     file << "# use opengl-hq video output for high-quality video rendering.\n";
     file << "profile=gpu-hq\n";
     file << "deband=no\n\n";
-    file << "# Enable hardware decoding if available.\n";
-    file << "hwdec=auto\n";
+    file << "# Enable hardware decoding if available. auto-safe is more stable for the render API.\n";
+    file << "hwdec=auto-safe\n";
   }
 
   if (!std::filesystem::exists(inputConf)) {

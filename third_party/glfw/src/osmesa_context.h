@@ -1,8 +1,8 @@
-//========================================================================
+﻿//========================================================================
 // GLFW 3.3 OSMesa - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2016 Google Inc.
-// Copyright (c) 2016-2017 Camilla Löwy <elmindreda@glfw.org>
+// Copyright (c) 2016-2017 Camilla LÃ¶wy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
