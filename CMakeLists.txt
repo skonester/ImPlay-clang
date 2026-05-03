@@ -23,7 +23,7 @@ include(FetchContent)
 
 FetchContent_Declare(
   fmt
-  URL https://github.com/fmtlib/fmt/archive/refs/tags/9.1.0.zip
+  URL https://github.com/fmtlib/fmt/archive/refs/tags/10.2.1.zip
 )
 FetchContent_Declare(
   json
@@ -50,6 +50,10 @@ endif()
 set(LIBROMFS_PROJECT_NAME ${PROJECT_NAME})
 set(LIBROMFS_RESOURCE_LOCATION "${CMAKE_SOURCE_DIR}/resources/romfs")
 set(OPENGL_LIBRARIES "glad")
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wno-deprecated-literal-operator)
+endif()
 
 # Clang support on Windows
 if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
