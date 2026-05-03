@@ -1,4 +1,4 @@
-﻿name: release
+name: release
 
 on:
   push:
@@ -18,6 +18,8 @@ jobs:
         with:
           commit: ${{ github.sha }}
           artifacts: "ImPlay-*/*"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: ImPlay (2026 Edition)
           body: |
             > **NOTICE: Libraries updated, fixes by Skonester 2026.**
             # Install
