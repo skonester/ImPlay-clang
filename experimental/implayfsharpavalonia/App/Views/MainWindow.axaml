@@ -1,0 +1,751 @@
+<Window
+    x:Class="ImPlay.App.Views.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:ImPlay.App.Controls"
+
+    xmlns:vm="using:ImPlay.App.ViewModels"
+    Title="{Binding Title}"
+    Width="980"
+    Height="620"
+    MinWidth="640"
+    MinHeight="380"
+    Background="#111111"
+    Topmost="{Binding IsAlwaysOnTop}"
+    CanResize="True"
+    SystemDecorations="BorderOnly"
+    ExtendClientAreaToDecorationsHint="False">
+
+  <!--
+    All layers stacked in a Panel. mpv renders video into an OpenGL surface
+    at the bottom; Avalonia controls remain normal overlays above it.
+  -->
+  <Border Background="#111111">
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- ── Top bar (own row – no mpv surface behind it) ─────────────────── -->
+    <Border
+        Name="TopBar"
+        Grid.Row="0"
+        Background="#141414"
+        IsHitTestVisible="True"
+        MinHeight="38">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+
+        <!-- Left: logo + open + subtitles -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="0">
+          <Image Width="18" Height="18" Margin="10,0,6,0"
+                 Source="avares://ImPlay/Assets/ImPlay/icon.png"
+                 IsHitTestVisible="False" />
+          <Button Classes="icon ctrl" Name="OpenButton"
+                  Click="OpenButton_OnClick" ToolTip.Tip="Open file">
+            <PathIcon Width="15" Height="15" Data="{StaticResource Icon.Open}" />
+          </Button>
+          <Button Classes="icon ctrl" Name="LoadSubtitleButton"
+                  Click="LoadSubtitleButton_OnClick" ToolTip.Tip="Subtitles">
+            <PathIcon Width="15" Height="15" Data="{StaticResource Icon.Subtitle}" />
+          </Button>
+          <Button Classes="icon ctrl" Name="VideoAdjustmentsButton"
+                  Classes.dim="{Binding !HasVideoAdjustments}"
+                  Click="VideoAdjustmentsButton_OnClick" ToolTip.Tip="Video adjustments">
+            <PathIcon Width="15" Height="15" Data="{StaticResource Icon.VideoAdjust}" />
+          </Button>
+          <Button Classes="icon ctrl" Name="PlaylistButton"
+                  Classes.dim="{Binding !IsPlaylistVisible}"
+                  Command="{Binding TogglePlaylistCommand}" ToolTip.Tip="Queue (Q)">
+            <PathIcon Width="15" Height="15" Data="{StaticResource Icon.Playlist}" />
+          </Button>
+        </StackPanel>
+
+        <!-- Centre: drag region + title -->
+        <Border Grid.Column="1"
+                Background="Transparent"
+                PointerPressed="TitleBar_PointerPressed">
+          <TextBlock Text="{Binding Title}"
+                     VerticalAlignment="Center"
+                     HorizontalAlignment="Center"
+                     FontSize="12" Foreground="#DEDAD5"
+                     TextTrimming="CharacterEllipsis"
+                     IsHitTestVisible="False" />
+        </Border>
+
+        <!-- Right: info | pin | window chrome -->
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="0">
+          <Button Classes="icon ctrl" Name="AboutButton"
+                  Click="AboutButton_Click" ToolTip.Tip="About ImPlay">
+            <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Info}" />
+          </Button>
+          <Button Classes="icon ctrl" Name="KeyboardShortcutsButton"
+                  Click="KeyboardShortcutsButton_OnClick" ToolTip.Tip="Keyboard shortcuts">
+            <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Keyboard}" />
+          </Button>
+          <Button Classes="icon ctrl" Name="AlwaysOnTopButton"
+                  Classes.dim="{Binding !IsAlwaysOnTop}"
+                  Command="{Binding ToggleAlwaysOnTopCommand}" ToolTip.Tip="Always on top">
+            <PathIcon Width="13" Height="13" Data="{StaticResource Icon.AlwaysOnTop}" />
+          </Button>
+          <!-- Divider -->
+          <Border Width="1" Margin="4,9" Background="#383838" />
+          <!-- Window chrome -->
+          <Button Classes="wchrome" Name="MinimizeButton"
+                  Click="MinimizeButton_Click" ToolTip.Tip="Minimise">
+            <PathIcon Width="11" Height="11" Data="{StaticResource Icon.WindowMinimize}" />
+          </Button>
+          <Button Classes="wchrome" Name="MaximizeButton"
+                  Click="MaximizeButton_Click" ToolTip.Tip="Maximise">
+            <PathIcon Name="MaximizeIcon" Width="11" Height="11"
+                      Data="{StaticResource Icon.WindowMaximize}" />
+          </Button>
+          <Button Classes="wchrome close" Name="CloseButton"
+                  Click="CloseButton_Click" ToolTip.Tip="Close">
+            <PathIcon Width="11" Height="11" Data="{StaticResource Icon.WindowClose}" />
+          </Button>
+        </StackPanel>
+
+      </Grid>
+    </Border>
+
+    <!-- ── Video area (mpv + overlays + bottom bar) ──────────────────────── -->
+    <Grid Name="Root" Grid.Row="1" Background="#111111" DragDrop.AllowDrop="True"
+          ColumnDefinitions="*,Auto">
+    <Grid Grid.Column="0" Background="#111111" DragDrop.AllowDrop="True"
+          RowDefinitions="*,Auto">
+
+    <!-- ── Video frame (mpv native Vulkan path on Windows) ───────────────── -->
+    <controls:NativeMpvVideoHost Name="NativeVideoSurface"
+                                 Grid.Row="0"
+                                 Playback="{Binding Playback}"
+                                 IsActive="{Binding UseNativeVideoHost}"
+                                 IsVisible="{Binding UseNativeVideoHost}"
+                                 IsHitTestVisible="False" />
+
+    <!-- ── Video frame fallback (libmpv OpenGL render API) ───────────────── -->
+    <controls:MpvVideoSurface Name="OpenGlVideoSurface"
+                              Grid.Row="0"
+                              Playback="{Binding Playback}"
+                              IsVisible="{Binding UseOpenGlVideoSurface}"
+                              IsHitTestVisible="False" />
+
+    <!-- ── Transparent click / double-click surface ──────────────────────── -->
+    <Border Name="VideoClickLayer" Background="Transparent"
+            DragDrop.AllowDrop="True"
+            PointerPressed="VideoClickLayer_OnPointerPressed" />
+
+    <!-- ── Subtitle overlay (Avalonia-rendered) ──────────────────────────── -->
+    <Border VerticalAlignment="Bottom"
+            HorizontalAlignment="Stretch"
+            Margin="24,0,24,72"
+            IsHitTestVisible="False"
+            IsVisible="{Binding CurrentSubtitleText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Text="{Binding CurrentSubtitleText}"
+                 HorizontalAlignment="Center"
+                 TextAlignment="Center"
+                 FontSize="{Binding SubtitleFontSizeValue}"
+                 FontFamily="{Binding SubtitleFontFamily}"
+                 FontWeight="SemiBold"
+                 Foreground="{Binding SubtitleForeground}"
+                 TextWrapping="Wrap"
+                 MaxWidth="900">
+        <TextBlock.Effect>
+          <DropShadowEffect BlurRadius="4" OffsetX="1" OffsetY="1" Color="Black" Opacity="0.9" />
+        </TextBlock.Effect>
+      </TextBlock>
+    </Border>
+
+    <!-- ── Audio-only mode panel ─────────────────────────────────────────── -->
+    <Grid IsVisible="{Binding IsAudioMode}"
+          Background="#111111"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch"
+          RowDefinitions="*,Auto">
+
+      <!-- Center: cover art + info + visualizer -->
+      <StackPanel Grid.Row="0"
+                  VerticalAlignment="Center"
+                  HorizontalAlignment="Center"
+                  Spacing="22" Margin="24,0">
+
+        <!-- Cover art or placeholder circle -->
+        <Border Width="190" Height="190"
+                CornerRadius="16"
+                ClipToBounds="True"
+                Background="#1E1E1E"
+                BorderBrush="#303030"
+                BorderThickness="1"
+                HorizontalAlignment="Center">
+          <Panel>
+            <Image Source="{Binding CoverArtBitmap}"
+                   Stretch="UniformToFill"
+                   IsVisible="{Binding HasCoverArt}" />
+            <PathIcon Width="72" Height="72"
+                      Data="{StaticResource Icon.MusicNote}"
+                      Foreground="#353535"
+                      IsVisible="{Binding !HasCoverArt}"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center" />
+          </Panel>
+        </Border>
+
+        <!-- Track title -->
+        <StackPanel Spacing="5" HorizontalAlignment="Center">
+          <TextBlock Text="{Binding TrackTitle}"
+                     FontSize="18" FontWeight="SemiBold"
+                     Foreground="#F2EFEC"
+                     HorizontalAlignment="Center"
+                     TextTrimming="CharacterEllipsis"
+                     MaxWidth="480"
+                     IsVisible="{Binding TrackTitle,
+                         Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <TextBlock Text="{Binding TrackArtistAlbum}"
+                     FontSize="13"
+                     Foreground="#7A7675"
+                     HorizontalAlignment="Center"
+                     TextTrimming="CharacterEllipsis"
+                     MaxWidth="480"
+                     IsVisible="{Binding TrackArtistAlbum,
+                         Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+
+        <!-- Animated equalizer bars -->
+        <controls:AudioBars Width="84" Height="32"
+                            HorizontalAlignment="Center"
+                            IsActive="{Binding IsPlaying}" />
+      </StackPanel>
+
+      <!-- Folder track label: "3 / 12" -->
+      <TextBlock Grid.Row="1"
+                 Text="{Binding FolderTrackLabel}"
+                 HorizontalAlignment="Center"
+                 Margin="0,0,0,76"
+                 FontSize="11" Foreground="#4A4948"
+                 IsVisible="{Binding HasFolderTracks}" />
+    </Grid>
+
+    <!-- ── Start / Empty screen ───────────────────────────────────────────── -->
+    <Grid IsVisible="{Binding !HasMedia}"
+          IsHitTestVisible="{Binding !HasMedia}">
+
+      <!-- No recent files: simple logo placeholder -->
+      <StackPanel
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          Spacing="12"
+          IsVisible="{Binding !HasRecentFiles}">
+        <Image Width="120" Height="120" Opacity="0.85" Source="avares://ImPlay/Assets/ImPlay/icon.png" />
+        <TextBlock Text="ImPlay" FontSize="28" FontWeight="SemiBold"
+                   Foreground="#F7F5F3" HorizontalAlignment="Center" />
+        <TextBlock Text="Drop a file here, press O to open, or right-click"
+                   FontSize="13" Foreground="#807C79" HorizontalAlignment="Center" />
+      </StackPanel>
+
+      <!-- Has recent files: recent files grid -->
+      <Grid IsVisible="{Binding HasRecentFiles}"
+            RowDefinitions="Auto,*"
+            Margin="24,18,24,12">
+
+        <!-- Heading -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,14">
+          <Image Width="22" Height="22" Source="avares://ImPlay/Assets/ImPlay/icon.png" Opacity="0.7" />
+          <TextBlock Text="Recently Played"
+                     FontSize="16" FontWeight="SemiBold"
+                     Foreground="#E0DCD8" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- File cards -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{Binding RecentFileItems}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Panel Width="180" Height="80" Margin="0,0,10,10">
+
+                  <!-- Card button (plays the file) -->
+                  <Button Click="RecentItem_Click"
+                          Tag="{Binding FilePath}"
+                          Width="180" Height="80"
+                          Margin="0"
+                          Padding="12,10"
+                          Background="#1E1E1E"
+                          BorderBrush="#2A2A2A" BorderThickness="1"
+                          CornerRadius="6"
+                          HorizontalContentAlignment="Left"
+                          VerticalContentAlignment="Top">
+                    <Panel HorizontalAlignment="Stretch">
+
+                      <StackPanel Margin="0,0,18,12">
+                        <!-- File name -->
+                        <TextBlock Text="{Binding DisplayName}"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="#E8E4E0"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxLines="2" TextWrapping="Wrap" />
+
+                        <!-- Directory -->
+                        <TextBlock Text="{Binding Directory}"
+                                   FontSize="10" Foreground="#4A4948"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,3,0,0" />
+                      </StackPanel>
+
+                      <!-- Resume progress bar -->
+                      <Border Margin="3,0,3,0"
+                              Height="3"
+                              Background="#2A2A2A"
+                              CornerRadius="1.5"
+                              ClipToBounds="True"
+                              VerticalAlignment="Bottom"
+                              IsVisible="{Binding HasResume}">
+                        <ProgressBar Minimum="0" Maximum="100"
+                                     Value="{Binding ProgressPct}"
+                                     Background="Transparent"
+                                     Foreground="#FFFFFF"
+                                     CornerRadius="1.5" />
+                      </Border>
+
+                    </Panel>
+                  </Button>
+
+                  <!-- Remove button (top-right overlay) -->
+                  <Button Classes="ctrl remove-btn"
+                          Command="{Binding $parent[Window].DataContext.RemoveRecentFileCommand}"
+                          CommandParameter="{Binding FilePath}"
+                          Width="20" Height="20" MinWidth="20" MinHeight="20"
+                          HorizontalAlignment="Right" VerticalAlignment="Top"
+                          Margin="0,4,4,0"
+                          Opacity="0.35"
+                          ToolTip.Tip="Remove from recently played">
+                    <PathIcon Width="7" Height="7"
+                              Data="{StaticResource Icon.WindowClose}"
+                              Foreground="#6A6560" />
+                  </Button>
+
+                </Panel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Grid>
+    </Grid>
+
+    <!-- ── Error banner ──────────────────────────────────────────────────── -->
+    <Border
+        VerticalAlignment="Top"
+        Margin="0,48,0,0"
+        IsVisible="{Binding HasError}"
+        Padding="16,8"
+        Background="#CC77216F"
+        IsHitTestVisible="False">
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="#FFFFFF"
+                 TextWrapping="Wrap" HorizontalAlignment="Center" />
+    </Border>
+
+    <!-- ── OSD toast (bottom-right) ─────────────────────────────────────── -->
+    <Border
+        HorizontalAlignment="Left"
+        VerticalAlignment="Top"
+        Margin="16,10,0,0"
+        Padding="14,8"
+        CornerRadius="6"
+        Background="#DD1A1A1A"
+        BorderBrush="#44FFFFFF"
+        BorderThickness="1"
+        IsVisible="{Binding HasOsd}"
+        IsHitTestVisible="False">
+      <TextBlock Text="{Binding OsdMessage}" FontSize="13" FontWeight="SemiBold"
+                 Foreground="#F7F5F3" />
+    </Border>
+
+    <!-- ── Bottom control bar overlay ────────────────────────────────────── -->
+    <Border
+        Name="CastStatusBar"
+        VerticalAlignment="Bottom"
+        Margin="14,0,14,74"
+        Padding="10,7"
+        CornerRadius="6"
+        Background="#E51B1B1B"
+        BorderBrush="#334D9EFF"
+        BorderThickness="1"
+        IsVisible="{Binding IsCasting}"
+        HorizontalAlignment="Center">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <PathIcon Width="15" Height="15" Data="{StaticResource Icon.Cast}" Foreground="#BFD8FF" />
+        <TextBlock Text="{Binding CastStatusText}" Foreground="#F4F0EC" FontSize="12"
+                   VerticalAlignment="Center" />
+        <Button Classes="ctrl" Command="{Binding ToggleCastPlaybackCommand}" ToolTip.Tip="Play / pause cast">
+          <Panel>
+            <PathIcon Width="14" Height="14" Data="{StaticResource Icon.Play}"
+                      IsVisible="{Binding !IsCastPlaying}" />
+            <PathIcon Width="14" Height="14" Data="{StaticResource Icon.Pause}"
+                      IsVisible="{Binding IsCastPlaying}" />
+          </Panel>
+        </Button>
+        <Button Classes="ctrl" Command="{Binding CastVolumeDownCommand}" ToolTip.Tip="Cast volume down">
+          <PathIcon Width="14" Height="14" Data="{StaticResource Icon.VolumeMuted}" />
+        </Button>
+        <Button Classes="ctrl" Command="{Binding CastVolumeUpCommand}" ToolTip.Tip="Cast volume up">
+          <PathIcon Width="14" Height="14" Data="{StaticResource Icon.VolumeHigh}" />
+        </Button>
+        <Button Classes="ctrl" Command="{Binding StopCastingCommand}" ToolTip.Tip="Stop casting">
+          <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Stop}" />
+        </Button>
+      </StackPanel>
+    </Border>
+
+    <Border
+        Name="ControlBar"
+        Grid.Row="1"
+        VerticalAlignment="Bottom"
+        Padding="12,4,12,10"
+        Background="#E8111111"
+        Opacity="{Binding ControlsOpacity}"
+        IsHitTestVisible="{Binding ControlsVisible}">
+      <StackPanel Spacing="0">
+
+        <!-- Seek slider -->
+        <controls:SeekBar
+            Name="SeekSlider"
+            Minimum="0"
+            Maximum="1000"
+            Value="{Binding SeekValue}"
+            ChapterPositions="{Binding ChapterPositions}"
+            Margin="0,0,0,2"
+            SeekCommitted="SeekSlider_OnSeekCommitted" />
+
+        <!-- Transport row -->
+        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+              ColumnSpacing="2" Margin="2,0">
+
+          <!-- Seek back -->
+          <Button Grid.Column="0" Classes="ctrl"
+                  Command="{Binding SeekBackwardCommand}"
+                  ToolTip.Tip="{Binding SeekStepLabel, StringFormat='Back {0}'}">
+            <PathIcon Width="16" Height="16" Data="{StaticResource Icon.SeekBack}" />
+          </Button>
+
+          <!-- Play / Pause -->
+          <Button Grid.Column="1" Classes="ctrl"
+                  Command="{Binding TogglePlayPauseCommand}">
+            <Panel>
+              <PathIcon Width="18" Height="18" Data="{StaticResource Icon.Play}"
+                        IsVisible="{Binding !IsPlaying}" />
+              <PathIcon Width="18" Height="18" Data="{StaticResource Icon.Pause}"
+                        IsVisible="{Binding IsPlaying}" />
+            </Panel>
+          </Button>
+
+          <!-- Seek forward -->
+          <Button Grid.Column="2" Classes="ctrl"
+                  Command="{Binding SeekForwardCommand}"
+                  ToolTip.Tip="{Binding SeekStepLabel, StringFormat='Forward {0}'}">
+            <PathIcon Width="16" Height="16" Data="{StaticResource Icon.SeekForward}" />
+          </Button>
+
+          <!-- Stop -->
+          <Button Grid.Column="3" Classes="ctrl"
+                  Command="{Binding StopCommand}">
+            <PathIcon Width="14" Height="14" Data="{StaticResource Icon.Stop}" />
+          </Button>
+
+          <!-- Previous track -->
+          <Button Grid.Column="4" Classes="ctrl"
+                  Classes.dim="{Binding !HasPreviousTrack}"
+                  Command="{Binding PreviousTrackCommand}"
+                  ToolTip.Tip="Previous track (P)">
+            <PathIcon Width="16" Height="16" Data="{StaticResource Icon.SkipPrevious}" />
+          </Button>
+
+          <!-- Next track -->
+          <Button Grid.Column="5" Classes="ctrl"
+                  Classes.dim="{Binding !HasNextTrack}"
+                  Command="{Binding NextTrackCommand}"
+                  ToolTip.Tip="Next track (N)">
+            <PathIcon Width="16" Height="16" Data="{StaticResource Icon.SkipNext}" />
+          </Button>
+
+          <!-- Time display -->
+          <TextBlock Grid.Column="6" Text="{Binding TimeText}"
+                     VerticalAlignment="Center" FontSize="12"
+                     Foreground="#C8C3C2" Margin="6,0" />
+
+          <!-- Spacer -->
+          <Border Grid.Column="7" />
+
+          <!-- Speed badge -->
+          <Button Grid.Column="8" Classes="ctrl"
+                  Command="{Binding ResetSpeedCommand}"
+                  IsVisible="{Binding !IsNormalSpeed}">
+            <Border Background="#2A2A2A" CornerRadius="4" Padding="6,2">
+              <TextBlock Text="{Binding SpeedLabel}" FontSize="11"
+                         Foreground="#E8E4E0" FontWeight="Medium"
+                         VerticalAlignment="Center" />
+            </Border>
+          </Button>
+
+          <!-- Seek-step badge (click to cycle 5s → 10s → 30s) -->
+          <Button Grid.Column="9" Classes="ctrl"
+                  Command="{Binding CycleSeekStepCommand}"
+                  ToolTip.Tip="Seek step — click to cycle (5s / 10s / 30s)">
+            <Border Background="#2A2A2A" CornerRadius="4" Padding="6,2">
+              <TextBlock Text="{Binding SeekStepLabel}" FontSize="11"
+                         Foreground="#807C79" FontWeight="Medium"
+                         VerticalAlignment="Center" />
+            </Border>
+          </Button>
+
+          <!-- Loop -->
+          <Button Grid.Column="10" Classes="ctrl"
+                  Classes.dim="{Binding !IsLooping}"
+                  Command="{Binding ToggleLoopCommand}">
+            <PathIcon Width="16" Height="16" Data="{StaticResource Icon.Loop}" />
+          </Button>
+
+          <!-- Cast -->
+          <Button Grid.Column="11" Classes="ctrl"
+                  Click="CastButton_Click" ToolTip.Tip="Cast">
+            <PathIcon Width="16" Height="16" Data="{StaticResource Icon.Cast}" />
+          </Button>
+
+          <!-- Mute / Unmute -->
+          <Button Grid.Column="12" Classes="ctrl"
+                  Command="{Binding ToggleMuteCommand}">
+            <Panel>
+              <PathIcon Width="18" Height="18" Data="{StaticResource Icon.VolumeHigh}"
+                        IsVisible="{Binding !IsMuted}" />
+              <PathIcon Width="18" Height="18" Data="{StaticResource Icon.VolumeMuted}"
+                        IsVisible="{Binding IsMuted}" />
+            </Panel>
+          </Button>
+
+          <!-- Volume slider -->
+          <controls:VolumeSlider Grid.Column="13" Width="92" Minimum="0" Maximum="150"
+                                 Value="{Binding Volume}"
+                                 VerticalAlignment="Center"
+                                 Margin="2,0,6,0" />
+
+          <!-- Screenshot -->
+          <Button Grid.Column="14" Classes="ctrl"
+                  Command="{Binding TakeScreenshotCommand}">
+            <PathIcon Width="16" Height="16" Data="{StaticResource Icon.Screenshot}" />
+          </Button>
+
+          <!-- Bookmarks -->
+          <Button Grid.Column="15" Classes="ctrl"
+                  Click="BookmarksButton_Click" ToolTip.Tip="Bookmarks (B)">
+            <PathIcon Width="15" Height="15" Data="{StaticResource Icon.BookmarkOutline}" />
+          </Button>
+
+          <!-- Fullscreen -->
+          <Button Grid.Column="16" Classes="ctrl"
+                  Click="FullscreenButton_OnClick">
+            <PathIcon Name="FullscreenCtrlIcon" Width="18" Height="18"
+                      Data="{StaticResource Icon.Fullscreen}" />
+          </Button>
+
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <!-- ── Right-click context menu ──────────────────────────────────────── -->
+    <Grid.ContextMenu>
+      <ContextMenu Opening="RootContextMenu_Opening">
+
+        <!-- Recent files (populated in code-behind) -->
+        <MenuItem Name="RecentFilesMenuItem" Header="Open Recent" />
+        <Separator />
+
+        <MenuItem Header="Open Folder..." Click="OpenFolder_Click" />
+        <MenuItem Header="Add to Queue..." Click="AddToQueue_Click" />
+        <Separator />
+
+        <MenuItem Header="Jump to Time..." Click="JumpToTime_Click" InputGesture="Ctrl+G" />
+        <MenuItem Header="Load Subtitle..." Click="LoadSubtitle_Click" InputGesture="S" />
+        <MenuItem Header="Video Adjustments..." Click="VideoAdjustments_Click" />
+        <MenuItem Header="Cast..." Click="Cast_Click" />
+        <MenuItem Header="Keyboard Shortcuts" Click="KeyboardShortcuts_Click" />
+        <MenuItem Header="Screenshot" Command="{Binding TakeScreenshotCommand}" InputGesture="Alt+I" />
+        <MenuItem Header="Bookmarks…" Click="Bookmarks_Click" InputGesture="B" />
+        <Separator />
+
+        <!-- Speed sub-menu -->
+        <MenuItem Header="Playback Speed">
+          <MenuItem Header="0.25×" Click="Speed_Click" Tag="0.25" />
+          <MenuItem Header="0.50×" Click="Speed_Click" Tag="0.5" />
+          <MenuItem Header="0.75×" Click="Speed_Click" Tag="0.75" />
+          <MenuItem Header="Normal (1×)" Click="Speed_Click" Tag="1.0" />
+          <MenuItem Header="1.25×" Click="Speed_Click" Tag="1.25" />
+          <MenuItem Header="1.50×" Click="Speed_Click" Tag="1.5" />
+          <MenuItem Header="2×"    Click="Speed_Click" Tag="2.0" />
+          <MenuItem Header="4×"    Click="Speed_Click" Tag="4.0" />
+        </MenuItem>
+
+        <MenuItem Name="VideoRendererMenuItem" Header="Video Renderer">
+          <MenuItem Header="Vulkan" Click="VideoRenderer_Click" Tag="NativeVulkan" />
+          <MenuItem Header="OpenGL" Click="VideoRenderer_Click" Tag="OpenGl" />
+        </MenuItem>
+
+        <!-- Audio tracks (populated in code-behind) -->
+        <MenuItem Name="AudioTrackMenuItem" Header="Audio Track" />
+
+        <!-- Subtitle tracks (populated in code-behind) -->
+        <MenuItem Name="SubtitleTrackMenuItem" Header="Subtitle Track" />
+        <Separator />
+
+        <!-- Always on top (header updated in code-behind) -->
+        <MenuItem Name="AlwaysOnTopMenuItem" Header="Always on Top" Click="AlwaysOnTop_Click" />
+        <Separator />
+        <MenuItem Header="About ImPlay..." Click="About_Click" />
+
+      </ContextMenu>
+    </Grid.ContextMenu>
+
+    </Grid>
+
+    <!-- ── Playlist / Queue sidebar ─────────────────────────────────────── -->
+    <Border Grid.Column="1"
+            Width="260"
+            Background="#111111"
+            BorderBrush="#1E1E1E"
+            BorderThickness="1,0,0,0"
+            IsVisible="{Binding IsPlaylistVisible}">
+      <Grid RowDefinitions="44,*,Auto">
+
+        <!-- Header -->
+        <Border Grid.Row="0"
+                BorderBrush="#1E1E1E"
+                BorderThickness="0,0,0,1"
+                Padding="14,0,8,0">
+          <Grid ColumnDefinitions="*,Auto,Auto">
+            <TextBlock Grid.Column="0" Text="Queue"
+                       FontSize="11" FontWeight="SemiBold"
+                       Foreground="#5A5755"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1"
+                       Text="{Binding PlaylistCount}"
+                       FontSize="11" Foreground="#353230"
+                       VerticalAlignment="Center" Margin="0,0,4,0" />
+            <Button Grid.Column="2" Classes="ctrl"
+                    Command="{Binding ClearPlaylistCommand}"
+                    ToolTip.Tip="Clear queue" Width="28" Height="28" MinWidth="28" MinHeight="28">
+              <PathIcon Width="10" Height="10" Data="{StaticResource Icon.Stop}" Foreground="#3A3836" />
+            </Button>
+          </Grid>
+        </Border>
+
+        <!-- Item list -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+          <ItemsControl Name="PlaylistItemsControl"
+                        ItemsSource="{Binding PlaylistItems}"
+                        DragDrop.AllowDrop="True">
+
+            <!-- Hover / active / reveal styles scoped to the list -->
+            <ItemsControl.Styles>
+              <Style Selector="Border.playlist-row:pointerover">
+                <Setter Property="Background" Value="#0BFFFFFF" />
+              </Style>
+              <Style Selector="Border.playlist-row.active">
+                <Setter Property="Background" Value="#0CFFFFFF" />
+              </Style>
+              <Style Selector="Border.playlist-row:pointerover PathIcon.drag-icon">
+                <Setter Property="Foreground" Value="#4A4846" />
+              </Style>
+              <Style Selector="TextBlock.track-name.active">
+                <Setter Property="Foreground" Value="#D0CBC7" />
+              </Style>
+            </ItemsControl.Styles>
+
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Classes="playlist-row"
+                        Classes.active="{Binding IsCurrent}"
+                        Background="Transparent"
+                        Padding="0,1">
+                  <Grid ColumnDefinitions="26,3,*,28">
+
+                    <!-- ── Drag handle ──────────────────────────────────── -->
+                    <Border Grid.Column="0"
+                            Background="Transparent"
+                            Cursor="SizeAll"
+                            PointerPressed="PlaylistDragHandle_PointerPressed"
+                            ToolTip.Tip="Drag to reorder">
+                      <PathIcon Classes="drag-icon"
+                                Width="9" Height="9"
+                                Data="{StaticResource Icon.DragHandle}"
+                                Foreground="#272523"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+                    </Border>
+
+                    <!-- ── Active indicator bar ────────────────────────── -->
+                    <Border Grid.Column="1" Width="2" HorizontalAlignment="Left"
+                            Margin="0,7" CornerRadius="1"
+                            IsVisible="{Binding IsCurrent}"
+                            Background="#FFFFFF" />
+
+                    <!-- ── Filename (click to play) ────────────────────── -->
+                    <Button Grid.Column="2"
+                            Command="{Binding $parent[Window].DataContext.OpenPlaylistItemCommand}"
+                            CommandParameter="{Binding Index}"
+                            Padding="4,9" HorizontalContentAlignment="Left"
+                            Background="Transparent" BorderThickness="0"
+                            ToolTip.Tip="{Binding FilePath}">
+                      <TextBlock Classes="track-name"
+                                 Classes.active="{Binding IsCurrent}"
+                                 Text="{Binding DisplayName}"
+                                 FontSize="12"
+                                 Foreground="#5C5855"
+                                 TextTrimming="CharacterEllipsis" />
+                    </Button>
+
+                    <!-- ── Remove button (dim at rest, full on row hover) ───── -->
+                    <Button Grid.Column="3" Classes="ctrl remove-btn"
+                            Command="{Binding $parent[Window].DataContext.RemovePlaylistItemCommand}"
+                            CommandParameter="{Binding Index}"
+                            Width="28" Height="28" MinWidth="28" MinHeight="28"
+                            Opacity="0.35"
+                            ToolTip.Tip="Remove">
+                      <PathIcon Width="9" Height="9"
+                                Data="{StaticResource Icon.WindowClose}"
+                                Foreground="#6A6560" />
+                    </Button>
+
+                    <!-- ── Right-click context menu ────────────────────── -->
+                    <Grid.ContextMenu>
+                      <ContextMenu>
+                        <MenuItem Header="▶  Play"
+                                  Click="PlaylistCtx_Play" />
+                        <Separator />
+                        <MenuItem Header="Remove from queue"
+                                  Click="PlaylistCtx_Remove" />
+                        <Separator />
+                        <MenuItem Header="Add file to queue…"
+                                  Click="PlaylistCtx_AddFile" />
+                        <MenuItem Header="Add folder to queue…"
+                                  Click="PlaylistCtx_AddFolder" />
+                      </ContextMenu>
+                    </Grid.ContextMenu>
+
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Footer: track position -->
+        <TextBlock Grid.Row="2"
+                   Text="{Binding PlaylistPositionLabel}"
+                   FontSize="11" Foreground="#353230"
+                   HorizontalAlignment="Center"
+                   Margin="0,9"
+                   IsVisible="{Binding HasPlaylist}" />
+      </Grid>
+    </Border>
+
+    </Grid>
+  </Grid>
+  </Border>
+</Window>

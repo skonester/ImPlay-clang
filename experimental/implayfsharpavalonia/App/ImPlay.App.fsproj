@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>ImPlay</AssemblyName>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationIcon>../../resources/win32/app.ico</ApplicationIcon>
+    <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+    <AvaloniaResource Include="Styles\**" />
+    <AvaloniaResource Include="../../resources/icon.png">
+      <Link>Assets/ImPlay/icon.png</Link>
+    </AvaloniaResource>
+    <AvaloniaResource Include="../../resources/romfs/icon.png">
+      <Link>Assets/ImPlay/romfs-icon.png</Link>
+    </AvaloniaResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Controls\AudioBars.fs" />
+    <Compile Include="Controls\NativeMpvVideoHost.fs" />
+    <Compile Include="Controls\MpvVideoSurface.fs" />
+    <Compile Include="Controls\SeekBar.fs" />
+    <Compile Include="Controls\VolumeSlider.fs" />
+    <Compile Include="ViewModels\MainViewModel.fs" />
+    <Compile Include="Views\Dialogs.fs" />
+    <Compile Include="Views\MainWindow.fs" />
+    <Compile Include="App.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.12" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="FSharp.Core" Version="10.1.201" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\ImPlay.Core.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="../../experimental/ImPlay.Fs/mpv-dev/libmpv-2.dll">
+      <Link>libmpv-2.dll</Link>
+      <TargetPath>libmpv-2.dll</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

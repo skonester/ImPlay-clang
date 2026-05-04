@@ -1,0 +1,127 @@
+<Window
+    x:Class="ImPlay.App.Views.CastDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:core="using:ImPlay.Core.Services"
+    Title="Cast"
+    Width="560"
+    Height="390"
+    MinWidth="500"
+    MinHeight="340"
+    CanResize="True"
+    WindowStartupLocation="CenterOwner"
+    Background="#1E1E1E">
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="18,14,18,16">
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+      <StackPanel Grid.Column="0" Spacing="3">
+        <TextBlock Text="CAST TO"
+                   FontSize="10"
+                   FontWeight="SemiBold"
+                   Foreground="#807C79" />
+        <TextBlock Text="Choose a device on your network"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Foreground="#F7F5F3" />
+      </StackPanel>
+      <Button Grid.Column="1"
+              Name="RefreshButton"
+              Content="Refresh"
+              VerticalAlignment="Center"
+              Click="RefreshButton_Click" />
+    </Grid>
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,14,190">
+      <Border Grid.Column="0"
+              Background="#161616"
+              BorderBrush="#333333"
+              BorderThickness="1"
+              CornerRadius="5">
+        <Grid RowDefinitions="Auto,*">
+          <TextBlock Grid.Row="0"
+                     Name="DevicesStatusText"
+                     Text="Searching for devices..."
+                     Foreground="#807C79"
+                     FontSize="12"
+                     Margin="12,10,12,8" />
+          <ListBox Grid.Row="1"
+                   Name="DevicesList"
+                   ItemsSource="{Binding CastDevices}"
+                   Background="Transparent"
+                   BorderThickness="0"
+                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                   SelectionChanged="DevicesList_SelectionChanged"
+                   DoubleTapped="DevicesList_DoubleTapped">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="core:DlnaCastDevice">
+                <Grid ColumnDefinitions="Auto,*,Auto" Margin="7,7">
+                  <PathIcon Grid.Column="0"
+                            Width="17"
+                            Height="17"
+                            Data="{StaticResource Icon.Cast}"
+                            Foreground="#BFD8FF"
+                            VerticalAlignment="Center"
+                            Margin="0,0,10,0" />
+                  <TextBlock Grid.Column="1"
+                             Text="{Binding Name}"
+                             Foreground="#F7F5F3"
+                             TextTrimming="CharacterEllipsis"
+                             VerticalAlignment="Center" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
+
+      <Border Grid.Column="2"
+              Background="#181818"
+              BorderBrush="#333333"
+              BorderThickness="1"
+              CornerRadius="5"
+              Padding="14">
+        <StackPanel Spacing="10">
+          <TextBlock Text="STATUS"
+                     FontSize="10"
+                     FontWeight="SemiBold"
+                     Foreground="#807C79" />
+          <TextBlock Name="CastStateText"
+                     Text="Not casting"
+                     FontSize="14"
+                     FontWeight="SemiBold"
+                     Foreground="#F7F5F3"
+                     TextWrapping="Wrap" />
+          <TextBlock Name="CastDetailText"
+                     Text="Open a media file, then choose a device to start casting."
+                     FontSize="12"
+                     Foreground="#9D9B98"
+                     TextWrapping="Wrap" />
+          <Border Height="1" Background="#303030" Margin="0,2" />
+          <Button Name="DisconnectButton"
+                  Content="Disconnect"
+                  Click="DisconnectButton_Click" />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <Border Grid.Row="2" BorderBrush="#333333" BorderThickness="0,1,0,0" Margin="-18,14,-18,0">
+      <Grid ColumnDefinitions="Auto,*,Auto,8,Auto" Margin="18,10,18,0">
+        <TextBlock Grid.Column="0"
+                   Name="FooterStatusText"
+                   Foreground="#807C79"
+                   FontSize="12"
+                   VerticalAlignment="Center" />
+        <Border Grid.Column="1" />
+        <Button Grid.Column="2"
+                Name="CloseButton"
+                Content="Close"
+                Click="CloseButton_Click" />
+        <Button Grid.Column="4"
+                Name="CastButton"
+                Content="Cast"
+                Classes="accent"
+                Click="CastButton_Click" />
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

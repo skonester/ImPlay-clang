@@ -1,0 +1,355 @@
+<Window
+    x:Class="ImPlay.App.Views.SubtitleSettingsDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:ImPlay.Core.Models"
+    xmlns:viewModels="using:ImPlay.App.ViewModels"
+    Title="Subtitles"
+    Width="620"
+    Height="540"
+    MinWidth="500"
+    MinHeight="420"
+    CanResize="True"
+    WindowStartupLocation="CenterOwner"
+    Background="#1A1A1A">
+
+  <Grid RowDefinitions="*,Auto">
+
+    <TabControl Grid.Row="0" Margin="14,10,14,0">
+
+      <!-- File tab: current file + inline search -->
+      <TabItem Header="Subtitle file">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" Margin="0,12,0,0">
+
+          <!-- Embedded tracks from the current media file -->
+          <StackPanel Grid.Row="0"
+                      Name="EmbeddedTracksPanel"
+                      Spacing="6"
+                      Margin="0,0,0,12"
+                      IsVisible="False">
+            <TextBlock Text="Embedded subtitles"
+                       Foreground="#DEDAD5"
+                       FontSize="12"
+                       FontWeight="SemiBold" />
+            <ListBox Name="EmbeddedTracksList"
+                     MaxHeight="96"
+                     Background="#161616"
+                     BorderBrush="#333333"
+                     BorderThickness="1"
+                     CornerRadius="4">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="viewModels:TrackInfo">
+                  <Grid ColumnDefinitions="*,Auto" Margin="6,5">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding Name}"
+                               Foreground="#F7F5F3"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="1"
+                               Text="selected"
+                               IsVisible="{Binding IsSelected}"
+                               Foreground="#FFFFFF"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Margin="12,0,0,0" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </StackPanel>
+
+          <!-- Current file path + browse -->
+          <Grid Grid.Row="1" ColumnDefinitions="*,8,Auto" Margin="0,0,0,10">
+            <TextBox Grid.Column="0"
+                     Name="FilePathBox"
+                     IsReadOnly="True"
+                     Watermark="No subtitle file loaded"
+                     Background="#2D2D2D" Foreground="#F7F5F3"
+                     BorderBrush="#4D4658" />
+            <Button Grid.Column="2"
+                    Name="BrowseButton"
+                    Content="Browse…"
+                    Click="BrowseButton_Click" />
+          </Grid>
+
+          <!-- Divider -->
+          <Grid Grid.Row="2" ColumnDefinitions="*,Auto,*" Margin="0,0,0,10">
+            <Border Grid.Column="0" Height="1" Background="#3D3846" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1" Text="or search online"
+                       Foreground="#807C79" FontSize="11" Margin="12,0"
+                       VerticalAlignment="Center" />
+            <Border Grid.Column="2" Height="1" Background="#3D3846" VerticalAlignment="Center" />
+          </Grid>
+
+          <!-- Search query + language + button -->
+          <Grid Grid.Row="3" ColumnDefinitions="*,8,Auto,8,Auto" Margin="0,0,0,8">
+            <TextBox Grid.Column="0"
+                     Name="SearchBox"
+                     Watermark="Movie or show name…"
+                     Background="#2D2D2D" Foreground="#F7F5F3"
+                     BorderBrush="#4D4658" />
+            <ComboBox Grid.Column="2"
+                      Name="LanguageBox"
+                      MinWidth="130"
+                      MaxDropDownHeight="220"
+                      Focusable="True"
+                      Background="#2D2D2D" Foreground="#F7F5F3"
+                      BorderBrush="#4D4658" />
+            <Button Grid.Column="4"
+                    Name="SearchButton"
+                    Content="Search"
+                    Classes="accent"
+                    MinWidth="80"
+                    Click="SearchButton_Click" />
+          </Grid>
+
+          <!-- Status -->
+          <Grid Grid.Row="4" ColumnDefinitions="Auto,*" MinHeight="18" Margin="0,0,0,6">
+            <ProgressBar Grid.Column="0"
+                         Name="LoadingBar"
+                         IsIndeterminate="True"
+                         IsVisible="False"
+                         Width="100" Height="3"
+                         VerticalAlignment="Center"
+                         Margin="0,0,10,0" />
+            <TextBlock Grid.Column="1"
+                       Name="StatusText"
+                       Text="Enter a title and press Search."
+                       Foreground="#807C79" FontSize="12"
+                       VerticalAlignment="Center" />
+          </Grid>
+
+          <!-- Results -->
+          <ListBox Grid.Row="5"
+                   Name="ResultsList"
+                   Background="#161616"
+                   BorderBrush="#333333"
+                   BorderThickness="1"
+                   CornerRadius="4"
+                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                   DoubleTapped="ResultsList_DoubleTapped">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="models:SubtitleSearchResult">
+                <Grid ColumnDefinitions="*,10,Auto,8,Auto" Margin="4,6">
+                  <StackPanel Grid.Column="0" Spacing="3">
+                    <TextBlock Text="{Binding Title}"
+                               FontWeight="SemiBold" Foreground="#F7F5F3"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding FileName}"
+                               FontSize="11" Foreground="#9D9B98"
+                               TextTrimming="CharacterEllipsis" />
+                    <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,2,0,0">
+                      <Border Background="#2D2D2D" CornerRadius="3" Padding="5,2">
+                        <TextBlock Text="{Binding Language}" FontSize="10" Foreground="#DEDAD5" />
+                      </Border>
+                      <Border Background="#2D2D2D" CornerRadius="3" Padding="5,2">
+                        <TextBlock Text="{Binding Format}" FontSize="10" Foreground="#DEDAD5" />
+                      </Border>
+                      <Border Background="#2D2D2D" CornerRadius="3" Padding="5,2">
+                        <TextBlock Text="{Binding Source}" FontSize="10" Foreground="#807C79" />
+                      </Border>
+                    </StackPanel>
+                  </StackPanel>
+                  <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1">
+                    <TextBlock Text="{Binding Downloads, StringFormat='{}{0:N0}'}"
+                               FontSize="12" Foreground="#807C79"
+                               HorizontalAlignment="Right" />
+                    <TextBlock Text="downloads" FontSize="9" Foreground="#50504D"
+                               HorizontalAlignment="Right" />
+                  </StackPanel>
+                  <Button Grid.Column="4"
+                          Classes="downloadIcon"
+                          VerticalAlignment="Center"
+                          CommandParameter="{Binding}"
+                          Click="DownloadResultButton_Click"
+                          ToolTip.Tip="Download subtitle file">
+                    <Viewbox Width="22" Height="22">
+                      <Canvas Width="24" Height="24">
+                        <Path Data="{StaticResource Icon.DownloadTray}"
+                              Stroke="#DEDAD5"
+                              StrokeThickness="1.5"
+                              StrokeLineCap="Round"
+                              StrokeJoin="Round" />
+                        <Path Data="{StaticResource Icon.DownloadArrow}"
+                              Stroke="#DEDAD5"
+                              StrokeThickness="1.5"
+                              StrokeLineCap="Round"
+                              StrokeJoin="Round" />
+                      </Canvas>
+                    </Viewbox>
+                  </Button>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <!-- Use selected -->
+          <StackPanel Grid.Row="6" Orientation="Horizontal"
+                      HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Name="UseButton"
+                    Content="Use selected subtitle"
+                    IsEnabled="False"
+                    Click="UseButton_Click" />
+          </StackPanel>
+
+        </Grid>
+      </TabItem>
+
+      <!-- Appearance tab -->
+      <TabItem Header="Appearance">
+        <Grid RowDefinitions="Auto,16,*" Margin="0,14,0,0">
+
+          <!-- Live preview -->
+          <Border Grid.Row="0"
+                  MinHeight="132"
+                  Background="#101010"
+                  BorderBrush="#2A2A2A"
+                  BorderThickness="1"
+                  CornerRadius="6"
+                  ClipToBounds="True">
+            <Grid RowDefinitions="*,Auto" Margin="16,14">
+              <Border Grid.Row="0"
+                      Width="190"
+                      Height="70"
+                      Background="#181818"
+                      CornerRadius="4"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Opacity="0.9" />
+              <TextBlock Grid.Row="0"
+                         Name="PreviewText"
+                         Text="Every line should feel easy to read."
+                         TextAlignment="Center"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         TextWrapping="Wrap"
+                         MaxWidth="460"
+                         FontWeight="SemiBold">
+                <TextBlock.Effect>
+                  <DropShadowEffect BlurRadius="4" OffsetX="1" OffsetY="1" Color="Black" Opacity="0.9" />
+                </TextBlock.Effect>
+              </TextBlock>
+              <TextBlock Grid.Row="1"
+                         Text="PREVIEW"
+                         FontSize="10"
+                         FontWeight="SemiBold"
+                         Foreground="#55514E"
+                         HorizontalAlignment="Center"
+                         Margin="0,8,0,0" />
+            </Grid>
+          </Border>
+
+          <!-- Controls -->
+          <StackPanel Grid.Row="2" Spacing="10">
+
+            <Border Background="#161616" CornerRadius="5" Padding="12,10">
+              <Grid ColumnDefinitions="120,*">
+                <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                  <TextBlock Text="Text size"
+                             FontSize="13"
+                             FontWeight="SemiBold"
+                             Foreground="#DEDAD5" />
+                  <TextBlock Text="Subtitle scale"
+                             FontSize="10"
+                             Foreground="#6A6560" />
+                </StackPanel>
+                <Grid Grid.Column="1" ColumnDefinitions="*,8,*,8,*">
+                  <Button Grid.Column="0" Name="SizeSmallBtn" Content="Small"
+                          Click="SizeButton_Click" Tag="Small" />
+                  <Button Grid.Column="2" Name="SizeMediumBtn" Content="Medium"
+                          Click="SizeButton_Click" Tag="Medium" />
+                  <Button Grid.Column="4" Name="SizeLargeBtn" Content="Large"
+                          Click="SizeButton_Click" Tag="Large" />
+                </Grid>
+              </Grid>
+            </Border>
+
+            <Border Background="#161616" CornerRadius="5" Padding="12,10">
+              <Grid ColumnDefinitions="120,*">
+                <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                  <TextBlock Text="Font"
+                             FontSize="13"
+                             FontWeight="SemiBold"
+                             Foreground="#DEDAD5" />
+                  <TextBlock Text="Typeface"
+                             FontSize="10"
+                             Foreground="#6A6560" />
+                </StackPanel>
+                <ComboBox Grid.Column="1" Name="FontCombo"
+                          Background="#2D2D2D" Foreground="#F7F5F3"
+                          BorderBrush="#4D4658"
+                          MaxDropDownHeight="220"
+                          Focusable="True"
+                          HorizontalAlignment="Stretch"
+                          SelectionChanged="FontCombo_SelectionChanged" />
+              </Grid>
+            </Border>
+
+            <Border Background="#161616" CornerRadius="5" Padding="12,10">
+              <Grid ColumnDefinitions="120,*">
+                <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                  <TextBlock Text="Colour"
+                             FontSize="13"
+                             FontWeight="SemiBold"
+                             Foreground="#DEDAD5" />
+                  <TextBlock Text="Foreground"
+                             FontSize="10"
+                             Foreground="#6A6560" />
+                </StackPanel>
+                <ComboBox Grid.Column="1" Name="ColorCombo"
+                          Background="#2D2D2D" Foreground="#F7F5F3"
+                          BorderBrush="#4D4658"
+                          MaxDropDownHeight="220"
+                          Focusable="True"
+                          HorizontalAlignment="Stretch"
+                          SelectionChanged="ColorCombo_SelectionChanged" />
+              </Grid>
+            </Border>
+
+            <Border Background="#161616" CornerRadius="5" Padding="12,10">
+              <Grid ColumnDefinitions="120,Auto,8,*,8,Auto">
+                <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                  <TextBlock Text="Sync delay"
+                             FontSize="13"
+                             FontWeight="SemiBold"
+                             Foreground="#DEDAD5" />
+                  <TextBlock Text="Earlier / later"
+                             FontSize="10"
+                             Foreground="#6A6560" />
+                </StackPanel>
+                <Button Grid.Column="1" Name="DelayMinusBtn" Content="&#8722;"
+                        Width="36" Height="34" Click="DelayMinus_Click" FontSize="18"
+                        Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                <Border Grid.Column="3"
+                        Background="#2D2D2D" CornerRadius="5"
+                        BorderBrush="#4D4658" BorderThickness="1"
+                        Padding="8,6">
+                  <TextBlock Name="DelayLabel" Text="0 ms"
+                             HorizontalAlignment="Center"
+                             Foreground="#F7F5F3" FontSize="13" FontWeight="SemiBold" />
+                </Border>
+                <Button Grid.Column="5" Name="DelayPlusBtn" Content="+"
+                        Width="36" Height="34" Click="DelayPlus_Click" FontSize="18"
+                        Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+              </Grid>
+            </Border>
+
+          </StackPanel>
+
+        </Grid>
+      </TabItem>
+
+    </TabControl>
+
+    <!-- Bottom action bar -->
+    <Border Grid.Row="1" BorderBrush="#333333" BorderThickness="0,1,0,0">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                  Spacing="8" Margin="16,10">
+        <Button Name="DisableButton" Content="Disable subtitles"
+                Foreground="#FF7777" Click="DisableButton_Click" />
+        <Button Name="CancelButton" Content="Cancel" Click="CancelButton_Click" />
+        <Button Name="ApplyButton"  Content="Apply"  Classes="accent" Click="ApplyButton_Click" />
+      </StackPanel>
+    </Border>
+
+  </Grid>
+</Window>

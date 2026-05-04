@@ -1,0 +1,25 @@
+<Window
+    x:Class="ImPlay.App.Views.JumpToTimeDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Jump to Time"
+    Width="320"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner"
+    SizeToContent="Height"
+    Background="#1E1E1E">
+  <StackPanel Margin="16" Spacing="10">
+    <TextBlock Text="Enter time:" Foreground="#DEDAD5" />
+    <TextBox
+        Name="TimeInput"
+        Watermark="mm:ss  or  h:mm:ss  or  seconds"
+        Background="#2D2D2D"
+        Foreground="#F7F5F3"
+        BorderBrush="#4D4658"
+        CaretBrush="#FFFFFF" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Name="OkButton" Content="Jump" Classes="accent" Click="OkButton_Click" />
+      <Button Name="CancelButton" Content="Cancel" Click="CancelButton_Click" />
+    </StackPanel>
+  </StackPanel>
+</Window>

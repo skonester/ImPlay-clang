@@ -1,0 +1,129 @@
+<Window
+    x:Class="ImPlay.App.Views.SubtitleSearchDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:ImPlay.Core.Models"
+    Title="Search subtitles online"
+    Width="660"
+    Height="520"
+    MinWidth="520"
+    MinHeight="420"
+    CanResize="True"
+    WindowStartupLocation="CenterOwner"
+    Background="#1E1E1E">
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16,14,16,14">
+
+    <!-- ── Search bar ──────────────────────────────────────────────────────── -->
+    <Grid Row="0" ColumnDefinitions="*,8,Auto,8,Auto" Margin="0,0,0,10">
+      <TextBox Grid.Column="0"
+               Name="SearchBox"
+               Watermark="Movie or show name…"
+               Background="#2D2D2D" Foreground="#F7F5F3"
+               BorderBrush="#4D4658" />
+      <ComboBox Grid.Column="2"
+                Name="LanguageBox"
+                MinWidth="130"
+                Background="#2D2D2D" Foreground="#F7F5F3"
+                BorderBrush="#4D4658" />
+      <Button Grid.Column="4"
+              Name="SearchButton"
+              Content="Search"
+              Classes="accent"
+              MinWidth="80"
+              Click="SearchButton_Click" />
+    </Grid>
+
+    <!-- ── Status / loading row ────────────────────────────────────────────── -->
+    <Grid Row="1" ColumnDefinitions="Auto,*" Margin="0,0,0,8" MinHeight="18">
+      <ProgressBar Grid.Column="0"
+                   Name="LoadingBar"
+                   IsIndeterminate="True"
+                   IsVisible="False"
+                   Width="120" Height="3"
+                   VerticalAlignment="Center"
+                   Margin="0,0,10,0" />
+      <TextBlock Grid.Column="1"
+                 Name="StatusText"
+                 Text="Enter a title and press Search."
+                 Foreground="#807C79"
+                 FontSize="12"
+                 VerticalAlignment="Center" />
+    </Grid>
+
+    <!-- ── Results list ────────────────────────────────────────────────────── -->
+    <ListBox Grid.Row="2"
+             Name="ResultsList"
+             Background="#161616"
+             BorderBrush="#333333"
+             BorderThickness="1"
+             CornerRadius="4"
+             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+             DoubleTapped="ResultsList_DoubleTapped">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="models:SubtitleSearchResult">
+          <Grid ColumnDefinitions="*,10,Auto" Margin="4,6">
+
+            <!-- Left: title + filename + badges -->
+            <StackPanel Grid.Column="0" Spacing="3">
+              <TextBlock Text="{Binding Title}"
+                         FontWeight="SemiBold"
+                         Foreground="#F7F5F3"
+                         TextTrimming="CharacterEllipsis" />
+              <TextBlock Text="{Binding FileName}"
+                         FontSize="11"
+                         Foreground="#9D9B98"
+                         TextTrimming="CharacterEllipsis" />
+              <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,2,0,0">
+                <Border Background="#2A4D70" CornerRadius="3" Padding="5,2">
+                  <TextBlock Text="{Binding Language}"
+                             FontSize="10" Foreground="#9CC8EE" />
+                </Border>
+                <Border Background="#3D3846" CornerRadius="3" Padding="5,2">
+                  <TextBlock Text="{Binding Format}"
+                             FontSize="10" Foreground="#DEDAD5" />
+                </Border>
+                <Border CornerRadius="3" Padding="5,2">
+                  <Border.Background>
+                    <!-- Subtle tinted background per source -->
+                    <SolidColorBrush Color="#22FFFFFF" />
+                  </Border.Background>
+                  <TextBlock Text="{Binding Source}"
+                             FontSize="10" Foreground="#807C79" />
+                </Border>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Right: download count -->
+            <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1">
+              <TextBlock Text="{Binding Downloads, StringFormat='{}{0:N0}'}"
+                         FontSize="12"
+                         Foreground="#807C79"
+                         HorizontalAlignment="Right" />
+              <TextBlock Text="downloads"
+                         FontSize="9"
+                         Foreground="#50504D"
+                         HorizontalAlignment="Right" />
+            </StackPanel>
+
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <!-- ── Bottom buttons ──────────────────────────────────────────────────── -->
+    <StackPanel Grid.Row="3"
+                Orientation="Horizontal"
+                HorizontalAlignment="Right"
+                Spacing="8"
+                Margin="0,12,0,0">
+      <Button Name="CancelButton" Content="Cancel" Click="CancelButton_Click" />
+      <Button Name="UseButton"
+              Content="Use selected"
+              Classes="accent"
+              IsEnabled="False"
+              Click="UseButton_Click" />
+    </StackPanel>
+
+  </Grid>
+</Window>

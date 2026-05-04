@@ -1,0 +1,65 @@
+<Window
+    x:Class="ImPlay.App.Views.KeyboardShortcutsDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Keyboard Shortcuts"
+    Width="600"
+    Height="620"
+    MinWidth="420"
+    MinHeight="400"
+    CanResize="True"
+    WindowStartupLocation="CenterOwner"
+    Background="#1A1A1A">
+
+  <Grid Margin="8,8,8,8">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel Spacing="0">
+
+        <!-- Playback -->
+        <TextBlock Text="PLAYBACK"
+                   FontSize="10" FontWeight="SemiBold"
+                   Foreground="#807C79" Margin="0,4,0,8" />
+        <Grid Name="PlaybackGroup" />
+
+        <!-- Seeking -->
+        <TextBlock Text="SEEKING"
+                   FontSize="10" FontWeight="SemiBold"
+                   Foreground="#807C79" Margin="0,16,0,8" />
+        <Grid Name="SeekingGroup" />
+
+        <!-- Volume -->
+        <TextBlock Text="VOLUME"
+                   FontSize="10" FontWeight="SemiBold"
+                   Foreground="#807C79" Margin="0,16,0,8" />
+        <Grid Name="VolumeGroup" />
+
+        <!-- Speed -->
+        <TextBlock Text="SPEED"
+                   FontSize="10" FontWeight="SemiBold"
+                   Foreground="#807C79" Margin="0,16,0,8" />
+        <Grid Name="SpeedGroup" />
+
+        <!-- Tracks -->
+        <TextBlock Text="TRACKS"
+                   FontSize="10" FontWeight="SemiBold"
+                   Foreground="#807C79" Margin="0,16,0,8" />
+        <Grid Name="TracksGroup" />
+
+        <!-- Window -->
+        <TextBlock Text="WINDOW"
+                   FontSize="10" FontWeight="SemiBold"
+                   Foreground="#807C79" Margin="0,16,0,8" />
+        <Grid Name="WindowGroup" />
+
+        <!-- File / dialogs -->
+        <TextBlock Text="FILE &amp; DIALOGS"
+                   FontSize="10" FontWeight="SemiBold"
+                   Foreground="#807C79" Margin="0,16,0,8" />
+        <Grid Name="FileGroup" />
+
+      </StackPanel>
+    </ScrollViewer>
+
+  </Grid>
+</Window>

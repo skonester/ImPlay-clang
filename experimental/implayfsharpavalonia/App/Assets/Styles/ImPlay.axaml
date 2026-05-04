@@ -1,0 +1,152 @@
+<Styles xmlns="https://github.com/avaloniaui">
+  <Style Selector="Window">
+    <Setter Property="FontFamily" Value="Cantarell, Ubuntu, Inter, Segoe UI, sans-serif" />
+  </Style>
+
+  <Style Selector="Button">
+    <Setter Property="Background" Value="#3D3846" />
+    <Setter Property="Foreground" Value="#F7F5F3" />
+    <Setter Property="BorderBrush" Value="#5E5968" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="5" />
+    <Setter Property="Padding" Value="12,6" />
+    <Setter Property="MinHeight" Value="34" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="Transitions">
+      <Transitions />
+    </Setter>
+  </Style>
+
+  <Style Selector="Button:pointerover">
+    <Setter Property="Background" Value="#4D4658" />
+  </Style>
+
+  <Style Selector="Button:pressed">
+    <Setter Property="Background" Value="#2D2834" />
+  </Style>
+
+  <Style Selector="Button.accent">
+    <Setter Property="Background" Value="#FFFFFF" />
+    <Setter Property="BorderBrush" Value="#F7F5F3" />
+    <Setter Property="Foreground" Value="#1A1A1A" />
+  </Style>
+
+  <Style Selector="Button.accent:pointerover">
+    <Setter Property="Background" Value="#F7F5F3" />
+  </Style>
+
+  <Style Selector="Button.accent:pressed">
+    <Setter Property="Background" Value="#DEDAD5" />
+  </Style>
+
+  <Style Selector="Button.icon">
+    <Setter Property="Width" Value="36" />
+    <Setter Property="MinWidth" Value="36" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.icon:pointerover">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="Button.downloadIcon">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Width" Value="34" />
+    <Setter Property="MinWidth" Value="34" />
+    <Setter Property="Height" Value="34" />
+    <Setter Property="MinHeight" Value="34" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+
+  <Style Selector="Button.downloadIcon:pointerover">
+    <Setter Property="Background" Value="#223D3846" />
+  </Style>
+
+  <Style Selector="Button.downloadIcon:pressed">
+    <Setter Property="Background" Value="#334D4658" />
+  </Style>
+
+  <Style Selector="Slider">
+    <Setter Property="Foreground" Value="#FFFFFF" />
+    <Setter Property="Focusable" Value="False" />
+  </Style>
+
+  <!-- Transparent icon buttons for the control bar overlay -->
+  <Style Selector="Button.ctrl">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="#F7F5F3" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Width" Value="36" />
+    <Setter Property="MinWidth" Value="36" />
+    <Setter Property="Height" Value="36" />
+    <Setter Property="MinHeight" Value="36" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Focusable" Value="False" />
+  </Style>
+
+  <Style Selector="Button.ctrl:pointerover">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="Button.ctrl:pressed">
+    <Setter Property="Background" Value="#1AFFFFFF" />
+  </Style>
+
+  <Style Selector="PathIcon">
+    <Setter Property="Foreground" Value="#F7F5F3" />
+  </Style>
+
+  <!-- Dim state for toggle buttons (loop, always-on-top) when inactive -->
+  <Style Selector="Button.dim">
+    <Setter Property="Opacity" Value="0.35" />
+  </Style>
+
+  <!-- Window chrome buttons (minimize / maximize / close) -->
+  <Style Selector="Button.wchrome">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="#AAAAAA" />
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Width" Value="42" />
+    <Setter Property="MinWidth" Value="42" />
+    <Setter Property="Height" Value="38" />
+    <Setter Property="MinHeight" Value="38" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Focusable" Value="False" />
+  </Style>
+
+  <Style Selector="Button.wchrome:pointerover">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="Button.wchrome:pressed">
+    <Setter Property="Background" Value="#333333" />
+  </Style>
+
+  <Style Selector="Button.wchrome.close:pointerover">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="Button.wchrome.close:pressed">
+    <Setter Property="Background" Value="#A01E12" />
+  </Style>
+
+  <Style Selector="TextBlock">
+    <Setter Property="Foreground" Value="#F7F5F3" />
+  </Style>
+</Styles>
