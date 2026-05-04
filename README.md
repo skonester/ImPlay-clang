@@ -1,141 +1,104 @@
-[![build](https://github.com/tsl0922/ImPlay/actions/workflows/build.yml/badge.svg)](https://github.com/tsl0922/ImPlay/actions/workflows/build.yml)
-[![GitHub Releases](https://img.shields.io/github/downloads/tsl0922/ImPlay/total)](https://github.com/tsl0922/ImPlay/releases)
-![GitHub](https://img.shields.io/github/license/tsl0922/ImPlay)
+[![GitHub Releases](https://img.shields.io/github/downloads/skonester/ImPlay-clang/total)](https://github.com/skonester/ImPlay-clang/releases)
+![GitHub](https://img.shields.io/github/license/skonester/ImPlay-clang)
+![Version](https://img.shields.io/badge/version-9.0.0-blue)
 
 # ImPlay-Clang
 
-ImPlay is a Cross-Platform Desktop Media Player, built on top of [mpv](https://mpv.io) and [ImGui](https://github.com/ocornut/imgui).
+[Features](#key-features) | [Build](#windows-build-system) | [Architecture](architecture.md) | [License](LICENSE.txt)
 
-ImPlay aims to be mpv compatible, which means almost all mpv features from the [manual](https://mpv.io/manual) are (or will be) available.
+**ImPlay-Clang** is a fork of ImPlay, optimized for performance and updated for a modern Windows toolchain. It is a cross-platform desktop media player using [mpv](https://mpv.io) as the playback engine and [ImGui](https://github.com/ocornut/imgui) for the interface. 
 
-# Features
+This repository also serves as a lab for testing new features in C++, .NET, and F#.
 
-- Highly compatible with mpv
-  - GPU Video Decoding
-  - High Quality Video Output
-  - [Lua](https://mpv.io/manual/stable/#lua-scripting) and [Javascript](https://mpv.io/manual/stable/#javascript) Scripting
-  - [User Scripts](https://github.com/mpv-player/mpv/wiki/User-Scripts) and [Config Files](https://mpv.io/manual/stable/#configuration-files)
-  - [Command Line](https://mpv.io/manual/stable/#usage) Interface
-  - [Keyboard / Mouse](https://mpv.io/manual/stable/#interactive-control) Control
-  - [On Screen Controler](https://mpv.io/manual/stable/#on-screen-controller) (OSC)
-    - Compatible with popular OSC scripts: [mpv-osc-modern](https://github.com/maoiscat/mpv-osc-modern), [thumbfast](https://github.com/po5/thumbfast)
-  - Take Video Screenshot
-  - Used as Image Viewer
-- Graphical User Interface
-  - Context Menu with most commonly used commands
-  - Command Palette to quickly search commands and keys
-  - Quick Settings View with convenient controls
-    - Playlist / Chapter Manager
-    - Audio / Video / Subtitle Settings
-    - Audio / Video Equalizer Support
-  - Open Dialog for Media Files / Folders
-  - Open Clipboard / DVD / Blu-ray / ISO Image
-  - Shadow and Rounding effect for Interface
-- Notable additional features
-  - Single Instance Mode
-  - Space to play last file on IDLE
-  - Play recently opened files
-- Scripting Developer Friendly
-  - Visual view of mpv's internal properties
-  - Console with completion, history support
-  - Colorful mpv logs view with filter support
-- Cross platform: Window, Linux, macOS
+## Key Features
 
-# Installation
+### Core & Performance
+- **mpv Engine**: Full compatibility with [mpv features](https://mpv.io/manual).
+- **Clang-CL Build**: Compiled with LLVM/Clang-CL on Windows using C++20.
+- **Rendering**: Supports Vulkan and OpenGL video output via libmpv.
+- **Hardware Decoding**: Supports GPU-accelerated video decoding.
 
-- Binary version: download from the [Releases](https://github.com/tsl0922/ImPlay/releases) page
-- Build from source: check the [Compiling](https://github.com/tsl0922/ImPlay/wiki/Compiling) document
+### Interface
+- **ImGui UI**: Minimalist dark theme with support for rounding and shadows.
+- **Menus**: Context menu for playback controls and settings.
+- **Command Palette**: Searchable interface for commands and keybindings.
+- **Debug Tools**: Real-time view of mpv properties and internal logs.
 
-## Modern Windows Build (2026 Update)
+### Extensibility
+- **Scripting**: Supports Lua and Javascript scripts.
+- **User Scripts**: Compatible with common mpv scripts (osc, thumbfast, etc.).
+- **IPC**: Support for single-instance mode via IPC.
 
-The Windows build system has been modernized to support **Visual Studio 2022**, **Clang-CL**, and **CMake Presets**.
+---
 
-### Prerequisites
+## Windows Build System
 
-To build on Windows in 2026, ensure the following are installed:
+The project uses a PowerShell-based build system (`build-windows-clang.ps1`) for Windows development. It automates:
 
-1.  **Visual Studio 2022**: With the "Desktop development with C++" workload.
-2.  **LLVM (Clang)**: Install the latest LLVM for Windows (standalone or via the VS Installer).
-3.  **Ninja**: A fast build tool used by the modern presets.
-4.  **Windows SDK**: Ensure the latest Windows 10/11 SDK is installed.
+1.  **Prerequisite Checks**: Verifies Disk Space, Network, and Permissions.
+2.  **Environment Setup**: Locates and configures VS 2022, LLVM/Clang-CL, and Ninja.
+3.  **Dependencies**: Uses `FetchContent` to manage `fmt`, `nlohmann_json`, and `freetype`.
+4.  **Verification**: Checks build output and packaging.
 
-### Building with Presets
-
-#### Command Line
+### Building on Windows
 ```powershell
-# Configure using the Clang Release preset
-cmake --preset x64-clang-release
-
-# Build the project
-cmake --build --preset x64-clang-release
+.\build-windows-clang.ps1 -Preset x64-clang-release -Package -Fresh
 ```
 
-#### Visual Studio 2022
-1.  Open the **ImPlay.slnx** file.
-2.  Select your desired configuration (e.g., `x64 Clang Release`) from the top toolbar.
-3.  Press **F7** or click **Build > Build Solution**.
+---
 
-#### JetBrains Rider
-1.  Open the project folder.
-2.  Rider will automatically detect `CMakePresets.json`.
-3.  Select the preset in the top toolbar and click the **Build** icon.
+## Installation
 
-### Modernization Changes
+- **Binaries**: Download the latest release from the [Releases](https://github.com/skonester/ImPlay-clang/releases) page.
+- **Source**: Clone the repository and use the `build-windows-clang.ps1` script for local builds.
 
-The following changes were implemented in 2026 to ensure a stable and modern build environment:
+---
 
-*   **Dependency Management**: Migrated to `FetchContent` for `fmt` (v9.1.0), `nlohmann_json` (v3.11.3), and `Freetype` (v2.13.2). This removes the need for manual library management and ensures version consistency.
-*   **Clang-CL Support**: Added full support for the Clang compiler on Windows, including specific flags for C++20 standard compliance and resource compilation.
-*   **Solution Format**: Introduced the `.slnx` format for modern Visual Studio integration.
-*   **Compatibility Fixes**:
-    *   Resolved `fmt` `consteval` issues by pinning to v9.1.0 and disabling strict compile-time checks for Clang.
-    *   Fixed font symbol linkage by wrapping headers in `extern "C"`.
-    *   Defined `NOMINMAX` to prevent Windows header conflicts.
-    *   Automated `mpv.lib` import library preparation for the MSVC-style linker.
+## Research & Development Lab
 
-### Continuous Integration (CI)
+The `experimental` directory contains prototypes for future features and architectural changes.
 
-The project includes a modernized GitHub Actions workflow (`.github/workflows/build.yml`) that automates the build and release process:
+### 1. .NET Core (`experimental/ImPlay`)
+Prototyping a modular backend in C#:
+- **Casting**: DLNA and Chromecast support via `DlnaCastService`.
+- **Subtitles**: Online subtitle searching and parsing.
+- **Services**: Decoupled playback and settings logic.
 
-*   **Native Windows Pipeline**: Unlike older setups using MSYS2, the CI now uses a native Windows runner with the **Clang-CL** compiler and **Ninja** generator.
-*   **Environment Parity**: The CI uses the exact same **CMake Presets** as local development, ensuring that what builds on your machine also builds in the cloud.
-*   **Automated Packaging**: Every push to the main branch automatically generates:
-    *   **Windows**: `.msi` installers and `.zip` archives.
-    *   **macOS**: `.dmg` disk images.
-    *   **Linux**: `.deb` packages and `.AppImage` files.
-*   **Continuous Releases**: Successfully built artifacts are automatically deployed to a `continuous` release tag for easy testing.
+### 2. F# Avalonia Port (`experimental/implayfsharpavalonia`)
+An experimental UI port using F# and Avalonia:
+- **Functional Logic**: Using F# to manage playback states.
+- **Avalonia Rendering**: Native MPV hosting within an Avalonia window.
+- **Custom Controls**: F# implementations of audio bars, seek bars, and various dialogs.
 
-Read the [FAQ](https://github.com/tsl0922/ImPlay/wiki/FAQ).
+---
 
-# Screenshots
-### Context Menu
+## Screenshots
 
+### Interface & Context Menu
 ![screenshot](screenshot/1.jpg)
 
 ### Command Palette
-
 ![screenshot](screenshot/2.jpg)
 
-### Quick Settings & Debug
-
+### Debug View
 ![screenshot](screenshot/3.jpg)
 
-# Credits
+---
 
-ImPlay uses the following projects, thanks to their authors and contributors.
+## Credits
 
-- [mpv](https://mpv.io): Command line video player
-- [imgui](https://github.com/ocornut/imgui): Bloat-free Graphical User interface for C++ with minimal dependencies
-  - [stb_image.h](https://github.com/nothings/stb/blob/master/stb_image.h): public domain image loader
-- [glfw](https://www.glfw.org): an Open Source, multi-platform library for OpenGL, OpenGL ES and Vulkan development on the desktop
-- [glad](https://glad.dav1d.de): Multi-Language GL/GLES/EGL/GLX/WGL Loader-Generator based on the official specs
-- [fmt](https://fmt.dev): A modern formatting library
-- [json](https://json.nlohmann.me): JSON for Modern C++
-- [inipp](https://github.com/mcmtroffaes/inipp): Simple C++ ini parser
-- [libromfs](https://github.com/WerWolv/libromfs): Simple library for embedding static resources into C++ binaries using CMake
-- [nativefiledialog](https://github.com/btzy/nativefiledialog-extended): Cross platform (Windows, Mac, Linux) native file dialog library
-- [Cascadia Code](https://github.com/microsoft/cascadia-code) / [Font Awesome](https://fontawesome.com) / [Unifont](https://unifoundry.com/unifont.html): Fonts embeded in ImPlay
+ImPlay uses the following projects:
+- [mpv](https://mpv.io) & [imgui](https://github.com/ocornut/imgui)
+- [glfw](https://www.glfw.org) & [glad](https://glad.dav1d.de)
+- [fmt](https://fmt.dev) & [nlohmann/json](https://json.nlohmann.me)
+- [freetype](https://freetype.org) & [natsort](https://github.com/sourcefrog/natsort)
+- [nativefiledialog-extended](https://github.com/btzy/nativefiledialog-extended)
+- [libromfs](https://github.com/WerWolv/libromfs)
 
-# License
+---
 
-[GPLv2](LICENSE.txt).
+## License
+Distributed under the [GPLv2](LICENSE.txt). 
+
+Original work © 2022-2025 tsl0922. 
+Modernization and fork optimizations © 2026 Skonester.
