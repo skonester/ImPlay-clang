@@ -9,6 +9,11 @@
     <Compile Include="Mpv.fs" />
     <Compile Include="Models.fs" />
     <Compile Include="PathHelper.fs" />
+    <Compile Include="StartupLogger.fs" />
+    <Compile Include="MediaService.fs" />
+    <Compile Include="SubtitleParser.fs" />
+    <Compile Include="SubtitleSearchService.fs" />
+    <Compile Include="DlnaCastService.fs" />
     <Compile Include="SettingsService.fs" />
     <Compile Include="PlaybackService.fs" />
   </ItemGroup>

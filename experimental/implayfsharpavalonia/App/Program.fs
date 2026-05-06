@@ -9,7 +9,7 @@ open ImPlay.Core.Services
 module Program =
     [<EntryPoint>]
     let main args =
-        StartupLogger.Log("App starting...")
+        try StartupLogger.log("App starting...") with _ -> ()
 
         if String.IsNullOrEmpty(Environment.GetEnvironmentVariable("SESSION_MANAGER")) then
             Environment.SetEnvironmentVariable("SESSION_MANAGER", "")
@@ -17,11 +17,11 @@ module Program =
         try
             AppBuilder.Configure<App>()
                 .UsePlatformDetect()
-                .With(Win32PlatformOptions(RenderingMode = [| Win32RenderingMode.Vulkan; Win32RenderingMode.Wgl |]))
-                .With(X11PlatformOptions(RenderingMode = [| X11RenderingMode.Vulkan; X11RenderingMode.Glx |], EnableIme = false))
+                .With(Win32PlatformOptions(RenderingMode = [| Win32RenderingMode.Wgl; Win32RenderingMode.Vulkan |]))
+                .With(X11PlatformOptions(RenderingMode = [| X11RenderingMode.Glx; X11RenderingMode.Vulkan |], EnableIme = false))
                 .WithInterFont()
                 .LogToTrace()
                 .StartWithClassicDesktopLifetime(args)
         with ex ->
-            StartupLogger.LogException("Main loop", ex)
+            StartupLogger.logException "Main loop" ex
             reraise()

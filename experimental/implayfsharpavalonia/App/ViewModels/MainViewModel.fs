@@ -6,6 +6,7 @@ open System.Collections.Generic
 open System.ComponentModel
 open System.Globalization
 open System.IO
+open System.Threading
 open System.Windows.Input
 open System.Threading.Tasks
 open Avalonia.Media
@@ -52,9 +53,10 @@ module private MediaKind =
     let isAudioFile (filePath: string) =
         audioExtensions.Contains(Path.GetExtension(filePath).ToLowerInvariant())
 
-type MainViewModel(playback: PlaybackService, settings: SettingsService) as self =
+type MainViewModel(playback: PlaybackService, settings: SettingsService, casting: DlnaCastService) as self =
     let mutable _playback = playback
     let mutable _settings = settings
+    let mutable _casting = casting
     let mutable _title = "ImPlay"
     let mutable _timeText = "00:00 / 00:00"
     let mutable _errorMessage : string option = None
@@ -132,9 +134,9 @@ type MainViewModel(playback: PlaybackService, settings: SettingsService) as self
         _volume <- snap.Volume
         _speed <- snap.Speed
         _isLooping <- snap.IsLooping
-        _hasMedia <- not (String.IsNullOrWhiteSpace(snap.FilePath))
+        _hasMedia <- snap.FilePath.IsSome
         if _hasMedia then
-            _isAudioMode <- MediaKind.isAudioFile snap.FilePath
+            _isAudioMode <- MediaKind.isAudioFile snap.FilePath.Value
         
         let pos = snap.Position
         let dur = snap.Duration
@@ -142,7 +144,10 @@ type MainViewModel(playback: PlaybackService, settings: SettingsService) as self
         if not _isSeeking && dur.TotalSeconds > 0.0 then
             _seekValue <- (pos.TotalSeconds / dur.TotalSeconds) * 1000.0
             
-        _title <- if not (String.IsNullOrWhiteSpace(snap.FilePath)) then $"{Path.GetFileName(snap.FilePath)} - ImPlay" else "ImPlay"
+        _title <- 
+            match snap.FilePath with
+            | Some p -> $"{Path.GetFileName(p)} - ImPlay"
+            | None -> "ImPlay"
             
         notify "IsPlaying"
         notify "IsMuted"
@@ -161,6 +166,10 @@ type MainViewModel(playback: PlaybackService, settings: SettingsService) as self
         notify "SpeedLabel"
 
     do
+        match _playback.InitializationError with
+        | Some err -> _errorMessage <- Some err
+        | None -> ()
+
         _volume <- _settings.LastVolume
         _speed <- _settings.LastSpeed
         _videoRenderer <- _settings.VideoRenderer
@@ -174,8 +183,9 @@ type MainViewModel(playback: PlaybackService, settings: SettingsService) as self
         
         _playback.EndReached.Add(fun _ ->
             let currentPath = _playback.CurrentFilePath
-            if not (String.IsNullOrWhiteSpace(currentPath)) then
-                _settings.ClearResumePosition(currentPath)
+            match currentPath with
+            | Some p -> _settings.ClearResumePosition(Some p)
+            | _ -> ()
             refreshState()
         )
 
@@ -183,14 +193,14 @@ type MainViewModel(playback: PlaybackService, settings: SettingsService) as self
         [<CLIEvent>] member _.PropertyChanged = propertyChanged.Publish
 
     member _.Playback = _playback
-    member _.CurrentFilePath = _playback.CurrentFilePath
+    member _.CurrentFilePath = _playback.CurrentFilePath |> Option.toObj
     
     member _.Title = _title
     member _.TimeText = _timeText
     member _.Volume
-        with get() = _volume
-        and set(v) = 
-            let clamped = Math.Clamp(v, 0, 150)
+        with get() = double _volume
+        and set(v: double) = 
+            let clamped = int (Math.Clamp(v, 0.0, 150.0))
             if _volume <> clamped then
                 _volume <- clamped
                 _playback.SetVolume(_volume)
@@ -262,7 +272,7 @@ type MainViewModel(playback: PlaybackService, settings: SettingsService) as self
     member _.HasCoverArt = false
     member _.TrackTitle =
         match _playback.CurrentFilePath with
-        | path when not (String.IsNullOrWhiteSpace(path)) -> Path.GetFileNameWithoutExtension(path)
+        | Some path -> Path.GetFileNameWithoutExtension(path)
         | _ -> ""
     member _.TrackArtistAlbum = ""
     member _.HasFolderTracks = _playlistItems.Count > 1
@@ -297,6 +307,15 @@ type MainViewModel(playback: PlaybackService, settings: SettingsService) as self
         else
             _playback.GetSubtitleTracks()
             |> Array.map (fun t -> TrackInfo(t.Id, t.Name, t.IsSelected))
+    member _.VideoTracks =
+        if isNull _playback then [||]
+        else
+            _playback.GetVideoTracks()
+            |> Array.map (fun t -> TrackInfo(t.Id, t.Name, t.IsSelected))
+
+    member _.Casting = _casting
+    member _.CastDevices = _casting.Devices |> Seq.toArray
+    member _.ActiveCastDevice = _casting.ActiveDevice
 
     member _.TogglePlayPauseCommand = RelayCommand(fun _ -> _playback.TogglePlayPause())
     member _.ToggleMuteCommand = RelayCommand(fun _ -> _playback.ToggleMute())
@@ -308,8 +327,8 @@ type MainViewModel(playback: PlaybackService, settings: SettingsService) as self
     member _.PreviousTrackCommand = RelayCommand(fun _ -> openAtIndex(_playlistIndex - 1) |> ignore)
     member _.NextTrackCommand = RelayCommand(fun _ -> openAtIndex(_playlistIndex + 1) |> ignore)
     member self.ResetSpeedCommand = RelayCommand(fun _ -> (self.SetSpeedCommand :> ICommand).Execute("1.0"))
-    member _.VolumeUpCommand = RelayCommand(fun _ -> self.Volume <- self.Volume + 5)
-    member _.VolumeDownCommand = RelayCommand(fun _ -> self.Volume <- self.Volume - 5)
+    member _.VolumeUpCommand = RelayCommand(fun _ -> self.Volume <- self.Volume + 5.0)
+    member _.VolumeDownCommand = RelayCommand(fun _ -> self.Volume <- self.Volume - 5.0)
     member self.SpeedUpCommand = RelayCommand(fun _ -> (self.SetSpeedCommand :> ICommand).Execute(_speed + 0.25f))
     member self.SpeedDownCommand = RelayCommand(fun _ -> (self.SetSpeedCommand :> ICommand).Execute(_speed - 0.25f))
     member _.SeekBackward30Command = RelayCommand(fun _ -> _playback.SeekRelative(TimeSpan.FromSeconds(-30.0)))
@@ -329,14 +348,35 @@ type MainViewModel(playback: PlaybackService, settings: SettingsService) as self
             _settings.SaveSessionPreferences(_volume, _speed, _seekStep)
             notify "SeekStepLabel")
     member _.ToggleLoopCommand = RelayCommand(fun _ -> _playback.ToggleLoop())
+    member _.CycleFileLoopCommand = RelayCommand(fun _ -> _playback.CycleFileLoop())
+    member _.CyclePlaylistLoopCommand = RelayCommand(fun _ -> _playback.CyclePlaylistLoop())
+    member _.AbLoopCommand = RelayCommand(fun _ -> _playback.AbLoop())
+    member _.ToggleSubtitleVisibilityCommand = RelayCommand(fun _ -> _playback.ToggleSubtitleVisibility())
+    member _.AddAudioDelayCommand = RelayCommand(fun p -> match p with | :? double as s -> _playback.AddAudioDelay(s) | :? string as t -> _playback.AddAudioDelay(Double.Parse(t)) | _ -> ())
+    member _.AddSubtitleDelayCommand = RelayCommand(fun p -> match p with | :? double as s -> _playback.AddSubtitleDelay(s) | :? string as t -> _playback.AddSubtitleDelay(Double.Parse(t)) | _ -> ())
+    member _.AddSubtitleScaleCommand = RelayCommand(fun p -> match p with | :? double as s -> _playback.AddSubtitleScale(s) | :? string as t -> _playback.AddSubtitleScale(Double.Parse(t)) | _ -> ())
+    member _.AddSubtitlePosCommand = RelayCommand(fun p -> match p with | :? int as v -> _playback.AddSubtitlePos(v) | :? string as t -> _playback.AddSubtitlePos(Int32.Parse(t)) | _ -> ())
+    member _.ToggleFullscreenCommand = RelayCommand(fun _ -> notify "ToggleFullscreen")
+    member _.SeekRelativeFixedCommand =
+        RelayCommand(fun parameter ->
+            match parameter with
+            | :? float as seconds -> _playback.SeekRelative(TimeSpan.FromSeconds(seconds))
+            | :? string as text ->
+                match Double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture) with
+                | true, seconds -> _playback.SeekRelative(TimeSpan.FromSeconds(seconds))
+                | _ -> ()
+            | _ -> ())
+    member _.QuitCommand = RelayCommand(fun _ -> notify "Quit")
     member _.TakeScreenshotCommand =
         RelayCommand(fun _ ->
-            if not (String.IsNullOrWhiteSpace(_playback.CurrentFilePath)) then
+            match _playback.CurrentFilePath with
+            | Some _ ->
                 let dir =
                     Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
                     |> fun path -> if String.IsNullOrWhiteSpace(path) then AppContext.BaseDirectory else path
                 let fileName = "ImPlay-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".png"
-                _playback.TakeSnapshot(Path.Combine(dir, fileName)) |> ignore)
+                _playback.TakeSnapshot(Path.Combine(dir, fileName)) |> ignore
+            | _ -> ())
     member _.ClearPlaylistCommand =
         RelayCommand(fun _ ->
             _playlistPaths.Clear()
@@ -399,6 +439,42 @@ type MainViewModel(playback: PlaybackService, settings: SettingsService) as self
                 _playback.SetSubtitleTrack(id)
                 notify "SubtitleTracks"
             | _ -> ())
+    member _.SetVideoTrackCommand =
+        RelayCommand(fun parameter ->
+            match parameter with
+            | :? int as id ->
+                _playback.SetVideoTrack(id)
+                notify "VideoTracks"
+            | _ -> ())
+
+    member _.DiscoverCastDevicesCommand =
+        RelayCommand(fun _ ->
+            async {
+                let! _ = _casting.DiscoverAsync(TimeSpan.FromSeconds(5.0), CancellationToken.None) |> Async.AwaitTask
+                notify "CastDevices"
+            } |> Async.StartImmediate)
+
+    member _.StartCastingCommand =
+        RelayCommand(fun parameter ->
+            match parameter with
+            | :? DlnaCastDevice as device ->
+                async {
+                    match _playback.CurrentFilePath with
+                    | Some path ->
+                        let pos = _playback.Position
+                        let vol = _playback.Volume
+                        let! _ = _casting.CastAsync(device, path, None, pos, vol, CancellationToken.None) |> Async.AwaitTask
+                        notify "ActiveCastDevice"
+                    | None -> ()
+                } |> Async.StartImmediate
+            | _ -> ())
+
+    member _.StopCastingCommand =
+        RelayCommand(fun _ ->
+            async {
+                let! _ = _casting.StopAsync(CancellationToken.None) |> Async.AwaitTask
+                notify "ActiveCastDevice"
+            } |> Async.StartImmediate)
 
     member _.CycleAudioTrackCommand =
         RelayCommand(fun _ ->
@@ -438,10 +514,29 @@ type MainViewModel(playback: PlaybackService, settings: SettingsService) as self
                 else VideoRendererKind.NativeVulkan
             (self.SetVideoRendererCommand :> ICommand).Execute(next))
 
-    member _.StopCastingCommand = RelayCommand(fun _ -> ())
-    member _.ToggleCastPlaybackCommand = RelayCommand(fun _ -> ())
-    member _.CastVolumeDownCommand = RelayCommand(fun _ -> ())
-    member _.CastVolumeUpCommand = RelayCommand(fun _ -> ())
+    member _.ToggleCastPlaybackCommand =
+        RelayCommand(fun _ ->
+            async {
+                match! _casting.GetIsPlayingAsync(CancellationToken.None) |> Async.AwaitTask with
+                | Some true -> let! _ = _casting.PauseAsync(CancellationToken.None) |> Async.AwaitTask in ()
+                | _ -> let! _ = _casting.PlayAsync(CancellationToken.None) |> Async.AwaitTask in ()
+            } |> Async.StartImmediate)
+
+    member _.CastVolumeDownCommand =
+        RelayCommand(fun _ ->
+            async {
+                let vol = Math.Max(0, _playback.Volume - 5)
+                let! _ = _casting.SetVolumeAsync(vol, CancellationToken.None) |> Async.AwaitTask
+                ()
+            } |> Async.StartImmediate)
+
+    member _.CastVolumeUpCommand =
+        RelayCommand(fun _ ->
+            async {
+                let vol = Math.Min(100, _playback.Volume + 5)
+                let! _ = _casting.SetVolumeAsync(vol, CancellationToken.None) |> Async.AwaitTask
+                ()
+            } |> Async.StartImmediate)
 
     member _.PausePlayback() = _playback.Pause()
     member _.ResumePlayback() = _playback.Play()

@@ -5,17 +5,17 @@
     <AssemblyName>ImPlay</AssemblyName>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
-    <ApplicationIcon>../../resources/win32/app.ico</ApplicationIcon>
+    <ApplicationIcon>../../../resources/win32/app.ico</ApplicationIcon>
     <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
   </PropertyGroup>
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
     <AvaloniaResource Include="Styles\**" />
-    <AvaloniaResource Include="../../resources/icon.png">
+    <AvaloniaResource Include="../../../resources/icon.png">
       <Link>Assets/ImPlay/icon.png</Link>
     </AvaloniaResource>
-    <AvaloniaResource Include="../../resources/romfs/icon.png">
+    <AvaloniaResource Include="../../../resources/romfs/icon.png">
       <Link>Assets/ImPlay/romfs-icon.png</Link>
     </AvaloniaResource>
   </ItemGroup>
@@ -47,7 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="../../experimental/ImPlay.Fs/mpv-dev/libmpv-2.dll">
+    <Content Include="../../../experimental/ImPlay.Fs/libmpv-2.dll">
       <Link>libmpv-2.dll</Link>
       <TargetPath>libmpv-2.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

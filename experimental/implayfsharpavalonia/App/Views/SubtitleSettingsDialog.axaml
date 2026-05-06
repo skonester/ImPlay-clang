@@ -38,7 +38,7 @@
                      BorderThickness="1"
                      CornerRadius="4">
               <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="viewModels:TrackInfo">
+                <DataTemplate x:DataType="models:MediaTrack">
                   <Grid ColumnDefinitions="*,Auto" Margin="6,5">
                     <TextBlock Grid.Column="0"
                                Text="{Binding Name}"

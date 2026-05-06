@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:core="using:ImPlay.Core.Services"
+    xmlns:models="using:ImPlay.Core.Models"
     Title="Cast"
     Width="560"
     Height="390"
@@ -53,7 +54,7 @@
                    SelectionChanged="DevicesList_SelectionChanged"
                    DoubleTapped="DevicesList_DoubleTapped">
             <ListBox.ItemTemplate>
-              <DataTemplate x:DataType="core:DlnaCastDevice">
+              <DataTemplate x:DataType="models:DlnaCastDevice">
                 <Grid ColumnDefinitions="Auto,*,Auto" Margin="7,7">
                   <PathIcon Grid.Column="0"
                             Width="17"

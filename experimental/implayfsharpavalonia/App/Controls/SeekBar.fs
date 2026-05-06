@@ -30,6 +30,9 @@ type SeekBar() as self =
     static let ChapterPositionsProperty =
         AvaloniaProperty.Register<SeekBar, IReadOnlyList<double>>("ChapterPositions", [||])
 
+    static let IsSeekingProperty =
+        AvaloniaProperty.Register<SeekBar, bool>("IsSeeking", false, defaultBindingMode = Data.BindingMode.TwoWay)
+
     static let SeekCommittedEvent =
         RoutedEvent.Register<SeekBar, RoutedEventArgs>("SeekCommitted", RoutingStrategies.Bubble)
 
@@ -51,6 +54,10 @@ type SeekBar() as self =
     member _.ChapterPositions
         with get() : IReadOnlyList<double> = self.GetValue(ChapterPositionsProperty)
         and set(v: IReadOnlyList<double>) = self.SetValue(ChapterPositionsProperty, v) |> ignore
+
+    member _.IsSeeking
+        with get() : bool = self.GetValue(IsSeekingProperty)
+        and set(v: bool) = self.SetValue(IsSeekingProperty, v) |> ignore
 
     member _.AddSeekCommittedHandler(handler: EventHandler<RoutedEventArgs>) =
         self.AddHandler(SeekCommittedEvent, handler) |> ignore
@@ -114,6 +121,7 @@ type SeekBar() as self =
 
     member private _.Commit(pointer: IPointer) =
         _isDragging <- false
+        self.IsSeeking <- false
         pointer.Capture(null) |> ignore
         self.Value <- _displayValue
         self.RaiseEvent(RoutedEventArgs(SeekCommittedEvent))
@@ -122,6 +130,7 @@ type SeekBar() as self =
         base.OnPointerPressed(e)
         if e.GetCurrentPoint(self).Properties.IsLeftButtonPressed then
             _isDragging <- true
+            self.IsSeeking <- true
             e.Pointer.Capture(self) |> ignore
             self.SetValueFromPointer(e)
             e.Handled <- true
@@ -143,4 +152,5 @@ type SeekBar() as self =
         base.OnPointerCaptureLost(e)
         if _isDragging then
             _isDragging <- false
+            self.IsSeeking <- false
             self.RaiseEvent(RoutedEventArgs(SeekCommittedEvent))

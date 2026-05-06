@@ -16,6 +16,8 @@ open Avalonia.Threading
 open Avalonia.VisualTree
 open ImPlay.App.Controls
 open ImPlay.App.ViewModels
+open ImPlay.Core.Models
+open ImPlay.Core.Services
 open System.Windows.Input
 
 module private MediaFiles =
@@ -25,7 +27,7 @@ module private MediaFiles =
     let isMediaFile (path: string) =
         extensions.Contains(Path.GetExtension(path).ToLowerInvariant())
 
-type MainWindow() as self =
+type MainWindow(playback: PlaybackService, settings: SettingsService, casting: DlnaCastService, searcher: SubtitleSearchService) as self =
     inherit Window()
 
     let mutable _lastControlsPulseMs = 0L
@@ -59,7 +61,7 @@ type MainWindow() as self =
             if vm.IsPlaying || self.WindowState = WindowState.FullScreen then
                 if not (String.IsNullOrWhiteSpace(vm.CurrentFilePath)) && not vm.UseNativeVideoHost then
                     vm.ControlsVisible <- false
-                    self.Cursor <- Cursor(StandardCursorType.None)
+                    self.Cursor <- new Cursor(StandardCursorType.None)
 
     let reattachVulkanIfActive() =
         match getViewModel() with
@@ -73,7 +75,12 @@ type MainWindow() as self =
         | _ -> ()
 
     let onDragOver (e: DragEventArgs) =
-        e.DragEffects <- if e.DataTransfer.Contains(DataFormat.File) then DragDropEffects.Copy else DragDropEffects.None
+        let hasFiles =
+            match e.DataTransfer.TryGetFiles() with
+            | null -> false
+            | files -> files |> Seq.exists (fun f -> not (isNull f))
+
+        e.DragEffects <- if hasFiles then DragDropEffects.Copy else DragDropEffects.None
         e.Handled <- true
 
     let onDrop (e: DragEventArgs) =
@@ -101,8 +108,13 @@ type MainWindow() as self =
         | Some vm ->
             let ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control)
             let alt = e.KeyModifiers.HasFlag(KeyModifiers.Alt)
+            let shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift)
             match e.Key with
             | Key.Space -> 
+                (vm.TogglePlayPauseCommand :> ICommand).Execute(null)
+                showControls()
+                e.Handled <- true
+            | Key.P when not ctrl && not alt && not shift ->
                 (vm.TogglePlayPauseCommand :> ICommand).Execute(null)
                 showControls()
                 e.Handled <- true
@@ -123,10 +135,18 @@ type MainWindow() as self =
                 showControls()
                 e.Handled <- true
             | Key.Up ->
-                (vm.VolumeUpCommand :> ICommand).Execute(null)
+                (vm.SeekRelativeFixedCommand :> ICommand).Execute(60.0)
                 showControls()
                 e.Handled <- true
             | Key.Down ->
+                (vm.SeekRelativeFixedCommand :> ICommand).Execute(-60.0)
+                showControls()
+                e.Handled <- true
+            | Key.D0 ->
+                (vm.VolumeUpCommand :> ICommand).Execute(null)
+                showControls()
+                e.Handled <- true
+            | Key.D9 ->
                 (vm.VolumeDownCommand :> ICommand).Execute(null)
                 showControls()
                 e.Handled <- true
@@ -146,8 +166,16 @@ type MainWindow() as self =
                 (vm.ResetSpeedCommand :> ICommand).Execute(null)
                 showControls()
                 e.Handled <- true
+            | Key.OemPeriod when shift ->
+                (vm.NextTrackCommand :> ICommand).Execute(null)
+                showControls()
+                e.Handled <- true
             | Key.OemPeriod ->
                 (vm.StepFrameCommand :> ICommand).Execute(null)
+                showControls()
+                e.Handled <- true
+            | Key.OemComma when shift ->
+                (vm.PreviousTrackCommand :> ICommand).Execute(null)
                 showControls()
                 e.Handled <- true
             | Key.OemComma ->
@@ -198,11 +226,14 @@ type MainWindow() as self =
             | Key.N ->
                 (vm.NextTrackCommand :> ICommand).Execute(null)
                 e.Handled <- true
-            | Key.P ->
+            | Key.P when shift ->
                 (vm.PreviousTrackCommand :> ICommand).Execute(null)
                 e.Handled <- true
-            | Key.Q ->
+            | Key.Q when ctrl ->
                 (vm.TogglePlaylistCommand :> ICommand).Execute(null)
+                e.Handled <- true
+            | Key.Q ->
+                (vm.QuitCommand :> ICommand).Execute(null)
                 e.Handled <- true
             | Key.B ->
                 self.BookmarksButton_Click(null, null)
@@ -325,9 +356,24 @@ type MainWindow() as self =
             self.Focus() |> ignore
         )
         
-        self.Closed.Add(fun _ -> 
+        self.DataContextChanged.Add(fun _ ->
             match getViewModel() with
-            | Some vm -> (vm :> IDisposable).Dispose()
+            | Some vm ->
+                (vm :> INotifyPropertyChanged).PropertyChanged.Add(fun e ->
+                    match e.PropertyName with
+                    | "ToggleFullscreen" ->
+                        Dispatcher.UIThread.Post(fun () ->
+                            self.WindowState <- if self.WindowState = WindowState.FullScreen then WindowState.Normal else WindowState.FullScreen
+                        )
+                    | "Quit" -> Dispatcher.UIThread.Post(fun () -> self.Close())
+                    | _ -> ()
+                )
+            | _ -> ()
+        )
+
+        self.Closed.Add(fun _ -> 
+            match box self.DataContext with
+            | :? IDisposable as d -> d.Dispose()
             | _ -> ()
         )
 
@@ -355,11 +401,11 @@ type MainWindow() as self =
         } |> Async.StartImmediate
 
     member _.LoadSubtitleButton_OnClick(sender: obj, e: RoutedEventArgs) =
-        let dialog = SubtitleSettingsDialog()
+        let dialog = SubtitleSettingsDialog(playback, settings, searcher)
         dialog.ShowDialog(self) |> ignore
 
     member _.VideoAdjustmentsButton_OnClick(sender: obj, e: RoutedEventArgs) =
-        let dialog = VideoAdjustmentsDialog()
+        let dialog = VideoAdjustmentsDialog(playback)
         dialog.ShowDialog(self) |> ignore
 
     member _.AboutButton_Click(sender: obj, e: RoutedEventArgs) =
@@ -402,15 +448,18 @@ type MainWindow() as self =
         | _ -> ()
 
     member _.CastButton_Click(sender: obj, e: RoutedEventArgs) =
-        let dialog = CastDialog()
+        let dialog = CastDialog(casting, playback)
         dialog.ShowDialog(self) |> ignore
 
     member _.BookmarksButton_Click(sender: obj, e: RoutedEventArgs) =
-        let dialog = BookmarksDialog()
+        let dialog = BookmarksDialog(playback, settings)
         dialog.ShowDialog(self) |> ignore
 
     member _.FullscreenButton_OnClick(sender: obj, e: RoutedEventArgs) = self.WindowState <- if self.WindowState = WindowState.FullScreen then WindowState.Normal else WindowState.FullScreen
-    member _.SeekSlider_OnSeekCommitted(sender: obj, e: RoutedEventArgs) = ()
+    member _.SeekSlider_OnSeekCommitted(sender: obj, e: RoutedEventArgs) =
+        match getViewModel() with
+        | Some vm -> vm.CommitSeek(vm.SeekValue)
+        | _ -> ()
     member _.RootContextMenu_Opening(sender: obj, e: CancelEventArgs) =
         match sender, getViewModel() with
         | :? ContextMenu as cm, Some vm ->
@@ -444,6 +493,10 @@ type MainWindow() as self =
                 alwaysOnTopMenuItem.Header <- if vm.IsAlwaysOnTop then "✓ Always on Top" else "Always on Top"
             | None -> ()
 
+            match findMenuItem "VideoTrackMenuItem" cm with
+            | Some videoMenuItem -> populateTrackMenu videoMenuItem vm.VideoTracks (vm.SetVideoTrackCommand :> ICommand)
+            | None -> ()
+
             match findMenuItem "VideoRendererMenuItem" cm with
             | Some rendererMenuItem ->
                 rendererMenuItem.Header <- $"Video Renderer: {vm.VideoRendererLabel}"
@@ -457,8 +510,20 @@ type MainWindow() as self =
     member _.OpenFolder_Click(sender: obj, e: RoutedEventArgs) = openFolderAsync() |> Async.StartImmediate
     member _.AddToQueue_Click(sender: obj, e: RoutedEventArgs) = addToQueueAsync() |> Async.StartImmediate
     member _.JumpToTime_Click(sender: obj, e: RoutedEventArgs) =
-        let dialog = JumpToTimeDialog()
-        dialog.ShowDialog(self) |> ignore
+        async {
+            let dialog = JumpToTimeDialog()
+            let! result = dialog.ShowDialog<string>(self) |> Async.AwaitTask
+            if not (String.IsNullOrWhiteSpace(result)) then
+                // Parse HH:MM:SS or MM:SS
+                let parts = result.Split(':') |> Array.rev
+                let mutable seconds = 0.0
+                try
+                    if parts.Length >= 1 then seconds <- seconds + Double.Parse(parts.[0])
+                    if parts.Length >= 2 then seconds <- seconds + Double.Parse(parts.[1]) * 60.0
+                    if parts.Length >= 3 then seconds <- seconds + Double.Parse(parts.[2]) * 3600.0
+                    playback.Seek(TimeSpan.FromSeconds(seconds))
+                with _ -> ()
+        } |> Async.StartImmediate
 
     member _.LoadSubtitle_Click(sender: obj, e: RoutedEventArgs) = openSubtitleFileAsync() |> Async.StartImmediate
     member _.VideoAdjustments_Click(sender: obj, e: RoutedEventArgs) = self.VideoAdjustmentsButton_OnClick(sender, e)

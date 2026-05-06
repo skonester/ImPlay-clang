@@ -32,9 +32,11 @@ type App() as self =
         | :? IClassicDesktopStyleApplicationLifetime as desktop ->
             let playback = new PlaybackService()
             let settings = new SettingsService()
-            let vm = new MainViewModel(playback, settings)
+            let casting = new DlnaCastService()
+            let searcher = new SubtitleSearchService()
+            let vm = new MainViewModel(playback, settings, casting)
             
-            let window = new MainWindow()
+            let window = new MainWindow(playback, settings, casting, searcher)
             window.DataContext <- vm
             desktop.MainWindow <- window
             

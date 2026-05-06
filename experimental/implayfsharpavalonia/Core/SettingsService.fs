@@ -27,6 +27,8 @@ type BookmarkEntry() =
         else
             $"{t.Minutes}:{t.Seconds:D2}"
 
+type VideoRendererKind = NativeVulkan = 0 | OpenGl = 1
+
 type SettingsFile() =
     member val ResumePositions = Dictionary<string, double>() with get, set
     member val ResumeDurations = Dictionary<string, double>() with get, set
@@ -36,6 +38,7 @@ type SettingsFile() =
     member val LastVolume = 80 with get, set
     member val LastSpeed = 1.0f with get, set
     member val SeekStep = 5 with get, set
+    member val VideoRenderer = VideoRendererKind.OpenGl with get, set
 
 type SettingsService() =
     let _maxRecentFiles = 12
@@ -50,6 +53,7 @@ type SettingsService() =
     let mutable _lastVolume = 80
     let mutable _lastSpeed = 1.0f
     let mutable _seekStep = 5
+    let mutable _videoRenderer = VideoRendererKind.OpenGl
 
     let keyForFile (filePath: string) =
         let normalized = Path.GetFullPath(filePath)
@@ -76,6 +80,7 @@ type SettingsService() =
         settings.LastVolume <- _lastVolume
         settings.LastSpeed <- _lastSpeed
         settings.SeekStep <- _seekStep
+        settings.VideoRenderer <- _videoRenderer
         
         let options = JsonSerializerOptions(WriteIndented = true)
         let json = JsonSerializer.Serialize(settings, options)
@@ -91,16 +96,22 @@ type SettingsService() =
         _lastVolume <- settings.LastVolume
         _lastSpeed <- settings.LastSpeed
         _seekStep <- settings.SeekStep
+        _videoRenderer <- settings.VideoRenderer
 
     member _.RecentFiles = _recentFiles :> IReadOnlyList<string>
     member _.LastVolume = _lastVolume
     member _.LastSpeed = _lastSpeed
     member _.SeekStep = _seekStep
+    member _.VideoRenderer = _videoRenderer
 
     member _.SaveSessionPreferences(volume, speed, seekStep) =
         _lastVolume <- Math.Clamp(volume, 0, 150)
         _lastSpeed <- Math.Clamp(speed, 0.25f, 4.0f)
         _seekStep <- if List.contains seekStep [5; 10; 30] then seekStep else 5
+        save()
+
+    member _.SaveVideoRenderer(renderer) =
+        _videoRenderer <- renderer
         save()
 
     member _.AddRecentFile(filePath) =

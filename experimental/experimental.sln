@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ImPlay", "ImPlay", "{31E4F9D3-C8CA-3514-0116-D245FB675ED4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImPlay.Core", "ImPlay\Implay.Core\ImPlay.Core.csproj", "{174857BD-F8F7-EA04-FF41-BA542247B83B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{174857BD-F8F7-EA04-FF41-BA542247B83B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{174857BD-F8F7-EA04-FF41-BA542247B83B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{174857BD-F8F7-EA04-FF41-BA542247B83B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{174857BD-F8F7-EA04-FF41-BA542247B83B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{174857BD-F8F7-EA04-FF41-BA542247B83B} = {31E4F9D3-C8CA-3514-0116-D245FB675ED4}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {521B1EE8-85A8-4E43-AE24-1A7E5E653F9C}
+	EndGlobalSection
+EndGlobal

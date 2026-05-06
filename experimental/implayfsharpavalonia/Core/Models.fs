@@ -19,12 +19,32 @@ type VideoFrameData = {
     Data: IntPtr
 }
 
-type SubtitleSearchResult() =
-    member val Id : string = "" with get, set
-    member val Title : string = "" with get, set
-    member val FileName : string = "" with get, set
-    member val Language : string = "" with get, set
-    member val Format : string = "" with get, set
-    member val Source : string = "" with get, set
-    member val Downloads : int = 0 with get, set
-    member val Url : string = "" with get, set
+type MediaTrack = {
+    Id: int
+    Name: string
+    IsSelected: bool
+}
+
+type SubtitleLine = { 
+    Start : TimeSpan
+    End : TimeSpan
+    Text : string 
+}
+
+type SubtitleSearchResult = {
+    Source: string
+    Title: string
+    FileName: string
+    Language: string
+    Format: string
+    DownloadUrl: string
+    Downloads: int
+}
+
+type DlnaCastDevice = {
+    Id : string
+    Name : string
+    DescriptionUrl : Uri
+    ControlUrl : Uri
+    RenderingControlUrl : Uri option
+}

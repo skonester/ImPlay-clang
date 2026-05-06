@@ -411,6 +411,7 @@
             Minimum="0"
             Maximum="1000"
             Value="{Binding SeekValue}"
+            IsSeeking="{Binding IsSeeking}"
             ChapterPositions="{Binding ChapterPositions}"
             Margin="0,0,0,2"
             SeekCommitted="SeekSlider_OnSeekCommitted" />
@@ -553,51 +554,92 @@
     <Grid.ContextMenu>
       <ContextMenu Opening="RootContextMenu_Opening">
 
-        <!-- Recent files (populated in code-behind) -->
+        <MenuItem Header="Playback">
+          <MenuItem Header="Play/Pause" Command="{Binding TogglePlayPauseCommand}" InputGesture="Space" />
+          <MenuItem Header="Stop" Command="{Binding StopCommand}" />
+          <Separator />
+          <MenuItem Header="Seek Forward 10s" Command="{Binding SeekRelativeFixedCommand}" CommandParameter="10" InputGesture="Right" />
+          <MenuItem Header="Seek Backward 10s" Command="{Binding SeekRelativeFixedCommand}" CommandParameter="-10" InputGesture="Left" />
+          <MenuItem Header="Seek Forward 1m" Command="{Binding SeekRelativeFixedCommand}" CommandParameter="60" InputGesture="Up" />
+          <MenuItem Header="Seek Backward 1m" Command="{Binding SeekRelativeFixedCommand}" CommandParameter="-60" InputGesture="Down" />
+          <Separator />
+          <MenuItem Header="Next Media" Command="{Binding NextTrackCommand}" />
+          <MenuItem Header="Previous Media" Command="{Binding PreviousTrackCommand}" />
+          <MenuItem Header="Next Chapter" Command="{Binding NextChapterCommand}" InputGesture="PageUp" />
+          <MenuItem Header="Previous Chapter" Command="{Binding PreviousChapterCommand}" InputGesture="PageDown" />
+          <Separator />
+          <MenuItem Header="Playback Speed">
+            <MenuItem Header="0.25×" Command="{Binding SetSpeedCommand}" CommandParameter="0.25" />
+            <MenuItem Header="0.50×" Command="{Binding SetSpeedCommand}" CommandParameter="0.5" />
+            <MenuItem Header="0.75×" Command="{Binding SetSpeedCommand}" CommandParameter="0.75" />
+            <MenuItem Header="Normal (1×)" Command="{Binding SetSpeedCommand}" CommandParameter="1.0" />
+            <MenuItem Header="1.25×" Command="{Binding SetSpeedCommand}" CommandParameter="1.25" />
+            <MenuItem Header="1.50×" Command="{Binding SetSpeedCommand}" CommandParameter="1.5" />
+            <MenuItem Header="2×"    Command="{Binding SetSpeedCommand}" CommandParameter="2.0" />
+            <MenuItem Header="4×"    Command="{Binding SetSpeedCommand}" CommandParameter="4.0" />
+          </MenuItem>
+          <MenuItem Header="Looping">
+            <MenuItem Header="A-B Loop" Command="{Binding AbLoopCommand}" InputGesture="L" />
+            <MenuItem Header="File Loop" Command="{Binding CycleFileLoopCommand}" InputGesture="Shift+L" />
+            <MenuItem Header="Playlist Loop" Command="{Binding CyclePlaylistLoopCommand}" />
+          </MenuItem>
+        </MenuItem>
+
+        <MenuItem Header="Audio">
+          <MenuItem Name="AudioTrackMenuItem" Header="Audio Tracks" />
+          <Separator />
+          <MenuItem Header="Mute" Command="{Binding ToggleMuteCommand}" InputGesture="M" />
+          <MenuItem Header="Volume Up" Command="{Binding VolumeUpCommand}" InputGesture="0" />
+          <MenuItem Header="Volume Down" Command="{Binding VolumeDownCommand}" InputGesture="9" />
+          <Separator />
+          <MenuItem Header="Audio Delay">
+            <MenuItem Header="+100ms" Command="{Binding AddAudioDelayCommand}" CommandParameter="0.1" />
+            <MenuItem Header="-100ms" Command="{Binding AddAudioDelayCommand}" CommandParameter="-0.1" />
+            <MenuItem Header="Reset" Command="{Binding AddAudioDelayCommand}" CommandParameter="0.0" />
+          </MenuItem>
+        </MenuItem>
+
+        <MenuItem Header="Video">
+          <MenuItem Name="VideoTrackMenuItem" Header="Video Tracks" />
+          <Separator />
+          <MenuItem Name="VideoRendererMenuItem" Header="Video Renderer">
+            <MenuItem Header="Vulkan (Native)" Command="{Binding SetVideoRendererCommand}" CommandParameter="NativeVulkan" />
+            <MenuItem Header="OpenGL" Command="{Binding SetVideoRendererCommand}" CommandParameter="OpenGl" />
+          </MenuItem>
+          <MenuItem Header="Video Adjustments..." Click="VideoAdjustments_Click" />
+        </MenuItem>
+
+        <MenuItem Header="Subtitle">
+          <MenuItem Name="SubtitleTrackMenuItem" Header="Subtitle Tracks" />
+          <Separator />
+          <MenuItem Header="Show/Hide Subtitles" Command="{Binding ToggleSubtitleVisibilityCommand}" InputGesture="V" />
+          <MenuItem Header="Load Subtitle..." Click="LoadSubtitle_Click" InputGesture="S" />
+          <Separator />
+          <MenuItem Header="Subtitle Delay">
+            <MenuItem Header="+100ms" Command="{Binding AddSubtitleDelayCommand}" CommandParameter="0.1" />
+            <MenuItem Header="-100ms" Command="{Binding AddSubtitleDelayCommand}" CommandParameter="-0.1" />
+          </MenuItem>
+          <MenuItem Header="Subtitle Scale">
+            <MenuItem Header="Larger" Command="{Binding AddSubtitleScaleCommand}" CommandParameter="0.1" />
+            <MenuItem Header="Smaller" Command="{Binding AddSubtitleScaleCommand}" CommandParameter="-0.1" />
+          </MenuItem>
+        </MenuItem>
+
+        <MenuItem Header="Tools">
+          <MenuItem Header="Always on Top" Name="AlwaysOnTopMenuItem" Command="{Binding ToggleAlwaysOnTopCommand}" InputGesture="T" />
+          <MenuItem Header="Screenshot" Command="{Binding TakeScreenshotCommand}" InputGesture="Alt+I" />
+          <MenuItem Header="Cast..." Click="Cast_Click" />
+          <MenuItem Header="Bookmarks…" Click="Bookmarks_Click" InputGesture="B" />
+          <MenuItem Header="Jump to Time..." Click="JumpToTime_Click" InputGesture="Ctrl+G" />
+          <MenuItem Header="Keyboard Shortcuts" Click="KeyboardShortcuts_Click" />
+        </MenuItem>
+
+        <Separator />
         <MenuItem Name="RecentFilesMenuItem" Header="Open Recent" />
-        <Separator />
-
         <MenuItem Header="Open Folder..." Click="OpenFolder_Click" />
-        <MenuItem Header="Add to Queue..." Click="AddToQueue_Click" />
-        <Separator />
-
-        <MenuItem Header="Jump to Time..." Click="JumpToTime_Click" InputGesture="Ctrl+G" />
-        <MenuItem Header="Load Subtitle..." Click="LoadSubtitle_Click" InputGesture="S" />
-        <MenuItem Header="Video Adjustments..." Click="VideoAdjustments_Click" />
-        <MenuItem Header="Cast..." Click="Cast_Click" />
-        <MenuItem Header="Keyboard Shortcuts" Click="KeyboardShortcuts_Click" />
-        <MenuItem Header="Screenshot" Command="{Binding TakeScreenshotCommand}" InputGesture="Alt+I" />
-        <MenuItem Header="Bookmarks…" Click="Bookmarks_Click" InputGesture="B" />
-        <Separator />
-
-        <!-- Speed sub-menu -->
-        <MenuItem Header="Playback Speed">
-          <MenuItem Header="0.25×" Click="Speed_Click" Tag="0.25" />
-          <MenuItem Header="0.50×" Click="Speed_Click" Tag="0.5" />
-          <MenuItem Header="0.75×" Click="Speed_Click" Tag="0.75" />
-          <MenuItem Header="Normal (1×)" Click="Speed_Click" Tag="1.0" />
-          <MenuItem Header="1.25×" Click="Speed_Click" Tag="1.25" />
-          <MenuItem Header="1.50×" Click="Speed_Click" Tag="1.5" />
-          <MenuItem Header="2×"    Click="Speed_Click" Tag="2.0" />
-          <MenuItem Header="4×"    Click="Speed_Click" Tag="4.0" />
-        </MenuItem>
-
-        <MenuItem Name="VideoRendererMenuItem" Header="Video Renderer">
-          <MenuItem Header="Vulkan" Click="VideoRenderer_Click" Tag="NativeVulkan" />
-          <MenuItem Header="OpenGL" Click="VideoRenderer_Click" Tag="OpenGl" />
-        </MenuItem>
-
-        <!-- Audio tracks (populated in code-behind) -->
-        <MenuItem Name="AudioTrackMenuItem" Header="Audio Track" />
-
-        <!-- Subtitle tracks (populated in code-behind) -->
-        <MenuItem Name="SubtitleTrackMenuItem" Header="Subtitle Track" />
-        <Separator />
-
-        <!-- Always on top (header updated in code-behind) -->
-        <MenuItem Name="AlwaysOnTopMenuItem" Header="Always on Top" Click="AlwaysOnTop_Click" />
         <Separator />
         <MenuItem Header="About ImPlay..." Click="About_Click" />
+        <MenuItem Header="Quit" Command="{Binding QuitCommand}" InputGesture="Q" />
 
       </ContextMenu>
     </Grid.ContextMenu>

@@ -58,7 +58,7 @@ type NativeMpvVideoHost() as self =
         if hwnd <> IntPtr.Zero && self.IsActive && not (isNull self.Playback) then
             Win32.ShowWindow(hwnd, Win32.SW_SHOW) |> ignore
             self.Playback.UseNativeVideoWindow(hwnd, true) |> ignore
-            StartupLogger.Log($"Native mpv video host reattached: hwnd=0x{hwnd.ToInt64():X}, gpu-api=vulkan.")
+            StartupLogger.log($"Native mpv video host reattached: hwnd=0x{hwnd.ToInt64():X}, gpu-api=vulkan.")
 
     override _.CreateNativeControlCore(parent: IPlatformHandle) =
         if not (OperatingSystem.IsWindows()) || parent.Handle = IntPtr.Zero then
@@ -87,7 +87,7 @@ type NativeMpvVideoHost() as self =
                 base.CreateNativeControlCore(parent)
             else
                 hwnd <- handle
-                StartupLogger.Log($"Native mpv video host created: hwnd=0x{handle.ToInt64():X}.")
+                StartupLogger.log($"Native mpv video host created: hwnd=0x{handle.ToInt64():X}.")
                 Win32.ShowWindow(handle, if self.IsActive then Win32.SW_SHOW else Win32.SW_HIDE) |> ignore
                 if self.IsActive && not (isNull self.Playback) then
                     self.Playback.UseNativeVideoWindow(handle, true) |> ignore
@@ -98,7 +98,7 @@ type NativeMpvVideoHost() as self =
             if not (isNull self.Playback) then
                 self.Playback.DetachNativeVideoWindow(hwnd)
             Win32.DestroyWindow(hwnd) |> ignore
-            StartupLogger.Log($"Native mpv video host destroyed: hwnd=0x{hwnd.ToInt64():X}.")
+            StartupLogger.log($"Native mpv video host destroyed: hwnd=0x{hwnd.ToInt64():X}.")
             hwnd <- IntPtr.Zero
         else
             base.DestroyNativeControlCore(control)

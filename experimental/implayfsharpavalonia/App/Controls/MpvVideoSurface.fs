@@ -63,7 +63,7 @@ type MpvVideoSurface() as self =
 
     override _.OnOpenGlInit(gl) =
         base.OnOpenGlInit(gl)
-        StartupLogger.Log("OpenGL video surface initialized.")
+        StartupLogger.log("OpenGL video surface initialized.")
         _glReady <- true
         self.TryInitializeRenderer(gl)
         self.IsReadyForPlaybackOpen <- _rendererInitialized
@@ -71,7 +71,7 @@ type MpvVideoSurface() as self =
             self.RequestNextFrameRendering()
 
     override _.OnOpenGlDeinit(gl) =
-        StartupLogger.Log("OpenGL video surface deinitialized.")
+        StartupLogger.log("OpenGL video surface deinitialized.")
         self.IsReadyForPlaybackOpen <- false
         _glReady <- false
         _rendererInitialized <- false

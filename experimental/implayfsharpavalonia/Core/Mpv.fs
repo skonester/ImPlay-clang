@@ -20,22 +20,22 @@ and MpvEventId =
     | StartFile = 6
     | EndFile = 7
     | FileLoaded = 8
-    | TrackSwitched = 9 // Deprecated
-    | Idle = 10
-    | Pause = 11
-    | Unpause = 12
-    | Tick = 13
-    | ScriptInputDispatch = 14
-    | ClientMessage = 15
-    | VideoReconfig = 16
-    | AudioReconfig = 17
-    | MetadataUpdate = 18
-    | Seek = 19
-    | PlaybackRestart = 20
-    | PropertyChange = 21
-    | ChapterChange = 22
-    | Hook = 23
-    | TracksChanged = 24
+    | TracksChanged = 9
+    | TrackSwitched = 10
+    | Idle = 11
+    | Pause = 12
+    | Unpause = 13
+    | Tick = 14
+    | ScriptInputDispatch = 15
+    | ClientMessage = 16
+    | VideoReconfig = 17
+    | AudioReconfig = 18
+    | MetadataUpdate = 19
+    | Seek = 20
+    | PlaybackRestart = 21
+    | PropertyChange = 22
+    | ChapterChange = 23
+    | Hook = 24
 
 type MpvFormat =
     | None = 0
@@ -62,6 +62,13 @@ type MpvEventEndFile =
     val playlist_entry_id: int64
     val playlist_insert_id: int64
     val playlist_insert_num_entries: int
+
+[<Struct; StructLayout(LayoutKind.Sequential)>]
+type MpvEventLogMessage =
+    val prefix: IntPtr
+    val level: IntPtr
+    val text: IntPtr
+    val log_level: int
 
 type MpvRenderParamType =
     | Invalid = 0
@@ -130,6 +137,9 @@ module MpvNative =
 
     [<DllImport("libmpv-2.dll", CallingConvention = CallingConvention.Cdecl)>]
     extern IntPtr mpv_wait_event(IntPtr ctx, double timeout)
+
+    [<DllImport("libmpv-2.dll", CallingConvention = CallingConvention.Cdecl)>]
+    extern int mpv_request_log_messages(IntPtr ctx, [<MarshalAs(UnmanagedType.LPStr)>] string min_level)
 
     [<DllImport("libmpv-2.dll", CallingConvention = CallingConvention.Cdecl)>]
     extern void mpv_free(IntPtr data)
